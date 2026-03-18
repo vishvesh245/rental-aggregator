@@ -253,7 +253,11 @@ class MultiScrapeRequest(BaseModel):
 def _run_multi_pipeline(job_id: str, req: MultiScrapeRequest):
     """Run the multi-source pipeline (blocking)."""
     try:
-        _scrape_jobs[job_id]["status"] = "scraping"
+        def on_status(status: str):
+            _scrape_jobs[job_id]["status"] = status
+            _scrape_jobs[job_id]["_ts"] = time.time()
+
+        on_status("scraping")
         params = SearchParams(
             city=req.city,
             areas=req.areas,
@@ -267,6 +271,7 @@ def _run_multi_pipeline(job_id: str, req: MultiScrapeRequest):
             params=params,
             sources=req.sources,
             skip_geocoding=False,
+            on_status=on_status,
         )
         _scrape_jobs[job_id].update({
             "status": "done",
@@ -274,6 +279,8 @@ def _run_multi_pipeline(job_id: str, req: MultiScrapeRequest):
             "result": result,
         })
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         _scrape_jobs[job_id].update({"status": "error", "_ts": time.time(), "error": str(e)})
 
 

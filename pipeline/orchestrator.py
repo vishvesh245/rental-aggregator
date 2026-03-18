@@ -76,6 +76,7 @@ def run_full_pipeline(
     params: SearchParams,
     sources: list[str] | None = None,
     skip_geocoding: bool = False,
+    on_status: callable = None,
 ) -> dict:
     """
     Run the full scrape → extract → geocode → store pipeline for all sources.
@@ -125,6 +126,8 @@ def run_full_pipeline(
         nobroker_pre_extracted = nb_listings
 
     # Step 2: Extract structured data
+    if on_status:
+        on_status("extracting")
     print(f"\n[2/3] Extracting rental details...")
     all_listings: list[RentalListing] = []
 
@@ -170,6 +173,8 @@ def run_full_pipeline(
 
     # Step 3: Geocode
     if not skip_geocoding and all_listings:
+        if on_status:
+            on_status("geocoding")
         print(f"\n[3/3] Geocoding {len(all_listings)} listings...")
         all_listings = geocode_listings(all_listings, default_city=params.city)
         geocoded = sum(1 for l in all_listings if l.latitude is not None)

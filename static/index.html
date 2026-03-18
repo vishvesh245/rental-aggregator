@@ -531,6 +531,8 @@ function startLandingSearch() {
 function pollLandingJob(jobId, fill, label, sources) {
     const detail = document.getElementById('l-prog-detail');
     const srcDiv = document.getElementById('l-prog-sources');
+    const pollStart = Date.now();
+    const MAX_POLL_MS = 5 * 60 * 1000; // 5 minute timeout
 
     // Show source badges
     if (sources.length) {
@@ -550,8 +552,22 @@ function pollLandingJob(jobId, fill, label, sources) {
     };
 
     const poll = async () => {
-        const resp = await fetch('/api/scrape/' + jobId);
-        const job = await resp.json();
+        if (Date.now() - pollStart > MAX_POLL_MS) {
+            fill.style.width = '100%';
+            fill.style.background = '#ef4444';
+            label.textContent = 'Search timed out after 5 minutes';
+            label.style.color = '#ef4444';
+            detail.textContent = 'Sources took too long. Try again.';
+            document.getElementById('l-go').disabled = false;
+            document.getElementById('l-go').textContent = '🔍 Find Listings';
+            landingSearching = false;
+            return;
+        }
+        let resp, job;
+        try {
+            resp = await fetch('/api/scrape/' + jobId);
+            job = await resp.json();
+        } catch (e) { setTimeout(poll, 3000); return; }
 
         if (job.status === 'done') {
             fill.style.width = '100%';

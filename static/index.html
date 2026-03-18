@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RentScout — Find Your Next Home</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        .marker-cluster-small,.marker-cluster-medium,.marker-cluster-large{background:none !important}
+        .marker-cluster-small div,.marker-cluster-medium div,.marker-cluster-large div{background:none !important}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:#fafafa;color:#1a1a2e;overflow:hidden;height:100vh}
+
+        /* ─── Vars ─── */
+        :root{--c:#FF385C;--c2:#e62e50;--n:#1a1a2e;--bg:#f5f6fa;--bd:#eaedf2;--bd2:#dfe2e8;--m:#6b7280;--lt:#9ca3af;
+        --g:#10b981;--g-bg:#ecfdf5;--y:#f59e0b;--y-bg:#fffbeb;--r-clr:#ef4444;--r-bg:#fef2f2;
+        --nb:#FF6B35;--ac:#E91E63;--ho:#3b82f6;--fb:#1877F2;--r:12px;--rs:8px;
+        --shadow-xs:0 1px 2px rgba(0,0,0,.04);--shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+        --shadow-md:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -1px rgba(0,0,0,.04);--shadow-lg:0 10px 15px -3px rgba(0,0,0,.08),0 4px 6px -2px rgba(0,0,0,.04)}
+
+        /* ═══ LANDING PAGE — Hero + Form ═══ */
+        .landing{position:fixed;inset:0;background:linear-gradient(135deg,#fafafa,#f0f0f5);z-index:2000;display:flex;align-items:center;justify-content:center;transition:opacity .5s,transform .5s}
+        .landing.exit{opacity:0;transform:translateY(-20px);pointer-events:none}
+        .land-wrap{display:flex;align-items:center;gap:56px;max-width:920px;width:90%;padding:40px 0}
+        .land-hero{flex:1}
+        .land-hero-logo{font-size:28px;font-weight:900;margin-bottom:8px}.land-hero-logo em{font-style:normal;color:var(--c)}
+        .land-hero h1{font-size:32px;font-weight:800;color:var(--n);line-height:1.15;margin-bottom:12px}
+        .land-hero p{font-size:15px;color:#888;line-height:1.6;margin-bottom:20px}
+        .land-features{display:flex;flex-direction:column;gap:8px}
+        .land-feat{display:flex;align-items:center;gap:8px;font-size:13px;color:#666;font-weight:500}
+        .land-feat-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+        .land-form{width:360px;flex-shrink:0;background:#fff;border-radius:16px;padding:26px;box-shadow:0 8px 32px rgba(0,0,0,.06);border:1px solid #eee}
+        .land-form h3{font-size:15px;font-weight:700;margin-bottom:16px;color:var(--n)}
+        .l-row{display:flex;gap:10px;margin-bottom:14px}
+        .l-field{flex:1;display:flex;flex-direction:column;gap:4px}
+        .l-label{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.06em}
+        .l-input{border:1.5px solid #e5e5e5;border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;width:100%;color:var(--n);transition:border-color .2s}
+        .l-input:focus{border-color:var(--c)}
+        .l-select{border:1.5px solid #e5e5e5;border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;background:#fff;cursor:pointer;width:100%;color:var(--n)}
+        .l-chips{display:flex;gap:8px;flex-wrap:wrap}
+        .l-chip{padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500;background:#f4f5f7;cursor:pointer;border:2px solid transparent;transition:.15s;user-select:none}
+        .l-chip:hover{background:#eee}
+        .l-chip.active{background:var(--c);color:#fff;border-color:var(--c)}
+        .l-go{width:100%;background:var(--c);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;transition:background .2s}
+        .l-go:hover{background:#e31c5f}
+        .l-go:disabled{background:#ccc;cursor:not-allowed}
+        .l-prog-bar{height:6px;background:#f0f0f4;border-radius:3px;overflow:hidden;margin-top:16px;display:none}
+        .l-prog-fill{height:100%;background:linear-gradient(90deg,var(--c),#ff6b8a);border-radius:3px;width:0;transition:width .5s}
+        .l-prog-label{font-size:12px;color:#888;margin-top:8px;text-align:center;display:none}
+        .landing-footer{font-size:11px;color:#bbb;margin-top:18px;text-align:center}
+        /* Steps visual */
+        .steps-visual{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:20px}
+        .sv-step{display:flex;flex-direction:column;align-items:center;gap:4px;opacity:.4;transition:.3s}
+        .sv-step.active{opacity:1}.sv-step.done{opacity:.6}
+        .sv-step .sv-num{width:28px;height:28px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#888;transition:.3s}
+        .sv-step.active .sv-num{background:var(--c);color:#fff}
+        .sv-step.done .sv-num{background:var(--g);color:#fff}
+        .sv-step .sv-label{font-size:11px;color:#999;font-weight:500}
+        .sv-line{width:40px;height:2px;background:#eee;margin:0 4px;margin-bottom:20px}
+
+        /* ═══ DASHBOARD — Top Bar ═══ */
+        .topbar{height:60px;background:#fff;border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 20px;gap:10px;box-shadow:var(--shadow-xs);position:relative;z-index:100}
+        .logo{font-size:18px;font-weight:800;letter-spacing:-.6px;white-space:nowrap;flex-shrink:0}.logo em{font-style:normal;color:var(--c)}
+        .search-bar{display:flex;align-items:center;background:var(--bg);border-radius:10px;padding:0;border:1.5px solid var(--bd);transition:all .2s;flex-shrink:0;overflow:hidden}
+        .search-bar:focus-within{border-color:var(--c);box-shadow:0 0 0 3px rgba(255,56,92,.08)}
+        .sb-select{padding:9px 10px;border:none;background:none;font-size:12.5px;font-weight:600;font-family:inherit;color:var(--n);cursor:pointer;outline:none;border-right:1px solid var(--bd)}
+        .sb-sep{width:1px;height:18px;background:var(--bd);flex-shrink:0}
+        .sb-field{padding:9px 12px;border:none;background:none;font-size:12.5px;font-family:inherit;outline:none;width:130px;color:var(--n)}
+        .sb-field::placeholder{color:var(--lt)}
+        .sb-btn{padding:8px 16px;background:var(--c);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;margin:3px;transition:all .15s;letter-spacing:.01em}
+        .sb-btn:hover{background:var(--c2);transform:translateY(-1px);box-shadow:0 2px 8px rgba(255,56,92,.25)}
+        .sb-btn:disabled{background:#ccc;cursor:not-allowed;transform:none;box-shadow:none}
+        .tb-sep{width:1px;height:24px;background:var(--bd);flex-shrink:0}
+        /* Single location input with Office/Home toggle */
+        .loc-single{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg);border:1.5px solid var(--bd);border-radius:10px;transition:all .2s;min-width:0;flex-shrink:1;position:relative}
+        .loc-single:focus-within{border-color:var(--c);box-shadow:0 0 0 3px rgba(255,56,92,.06)}
+        .loc-single.resolved{border-color:var(--g);background:var(--g-bg);box-shadow:none}
+        .loc-single input{border:none;background:none;font-size:11.5px;font-family:inherit;outline:none;width:130px;color:var(--n);min-width:0;font-weight:500}
+        .loc-single input::placeholder{color:var(--lt);font-weight:400}
+        .loc-single .loc-check{font-size:11px;color:var(--g);font-weight:700;flex-shrink:0;display:none}
+        .loc-single.resolved .loc-check{display:block}
+        @keyframes pulse-border{0%,100%{border-color:var(--bd)}50%{border-color:var(--c);box-shadow:0 0 0 3px rgba(255,56,92,.15)}}
+        /* Inline radius pills — visible when location set */
+        .radius-inline{display:flex;gap:4px;align-items:center}
+        .radius-inline.hidden{display:none}
+        .rpill{padding:5px 10px;border-radius:16px;font-size:10.5px;font-weight:600;color:var(--m);background:var(--bg);border:1.5px solid var(--bd);cursor:pointer;white-space:nowrap;transition:all .15s}
+        .rpill:hover{border-color:var(--n);color:var(--n)}
+        .rpill.on{background:var(--n);color:#fff;border-color:var(--n)}
+        .loc-suggest{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #eee;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:1000;display:none;max-height:200px;overflow-y:auto}
+        .loc-suggest.open{display:block}
+        .loc-sug-item{padding:8px 12px;cursor:pointer;transition:.1s}
+        .loc-sug-item:hover{background:#f4f5f7}
+        .sug-main{font-size:12px;font-weight:500}
+        .sug-secondary{font-size:10px;color:#999}
+        /* Quick filter pills */
+        .qpill{padding:7px 14px;border:1.5px solid var(--bd);border-radius:20px;font-size:11.5px;font-weight:600;color:var(--m);background:#fff;cursor:pointer;white-space:nowrap;transition:all .15s;user-select:none;flex-shrink:0}
+        .qpill:hover{border-color:var(--bd2);color:var(--n);background:var(--bg)}
+        .qpill.active{background:var(--n);color:#fff;border-color:var(--n)}
+        /* More filters button */
+        .mf-btn{padding:7px 14px;border:1.5px solid var(--bd);border-radius:20px;font-size:11.5px;font-weight:600;color:var(--m);background:#fff;cursor:pointer;white-space:nowrap;transition:all .15s;display:inline-flex;align-items:center;gap:4px;flex-shrink:0}
+        .mf-btn:hover,.mf-btn.active{border-color:var(--c);color:var(--c)}
+        .flex1{flex:1}
+        .topbar-stat{font-size:11px;font-weight:600;color:var(--m);white-space:nowrap;flex-shrink:0;background:var(--bg);padding:6px 12px;border-radius:20px;border:1px solid var(--bd)}
+        /* Scrape status */
+        .scrape-status{display:none;align-items:center;gap:6px;font-size:12px;color:#666;white-space:nowrap}
+        .dot{width:8px;height:8px;border-radius:50%;animation:blink 1s infinite}
+        .dot-scraping{background:#f39c12}.dot-extracting{background:#3498db}.dot-geocoding{background:#2ecc71}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+        /* ═══ MORE FILTERS DROPDOWN ═══ */
+        .mf-dropdown{position:absolute;top:calc(100% + 4px);left:0;background:#fff;border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,.12);border:1px solid var(--bd);padding:18px;z-index:500;display:none;min-width:360px}
+        .mf-dropdown.open{display:block}
+        .mf-close{position:absolute;top:10px;right:12px;background:none;border:none;font-size:16px;color:#bbb;cursor:pointer;padding:2px}
+        .mf-close:hover{color:var(--n)}
+        .mf-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#aaa;margin-bottom:8px}
+        .mf-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+        .mf-row:last-child{margin-bottom:0}
+        .mf-divider{height:1px;background:var(--bd);margin:12px 0}
+        .mf-input{border:1.5px solid var(--bd);border-radius:var(--rs);padding:8px 10px;font-size:12px;font-family:inherit;outline:none;flex:1;min-width:0;color:var(--n);transition:border-color .2s}
+        .mf-input:focus{border-color:var(--c)}
+
+        /* ═══ MAIN LAYOUT — Clean Split ═══ */
+        .main{display:flex;height:calc(100vh - 60px)}
+        /* List panel */
+        .list-panel{width:360px;min-width:300px;flex-shrink:0;display:flex;flex-direction:column;background:#fff;border-right:1px solid var(--bd)}
+        .list-hdr{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bd);flex-shrink:0}
+        .list-hdr-t{font-size:13px;font-weight:700;color:var(--n)}
+        .sort-sel{font-size:11px;font-weight:500;color:var(--m);border:none;background:none;cursor:pointer;font-family:inherit;outline:none}
+        .list-scroll{flex:1;overflow-y:auto}
+
+        /* Cluster notice */
+        .cl-notice{padding:10px 16px;background:#fffbe6;border-bottom:1px solid #ffeaa7;font-size:12px;color:#856404;display:none;align-items:center;gap:6px;flex-shrink:0}
+        .cl-notice.show{display:flex}
+        .cl-notice strong{font-weight:700}
+        .cl-notice button{background:none;border:none;cursor:pointer;color:#856404;font-weight:700;font-size:14px;margin-left:auto;padding:0 4px}
+
+        /* First-run nudge */
+        .nudge{padding:14px 16px;background:linear-gradient(135deg,#f0f7ff,#f5f0ff);border-bottom:1px solid #e0e4ff;display:flex;gap:12px;align-items:flex-start;flex-shrink:0}
+        .nudge.hidden{display:none}
+        .nudge-icon{font-size:24px;flex-shrink:0;margin-top:2px}
+        .nudge-body{flex:1}
+        .nudge-title{font-size:13px;font-weight:700;color:var(--n);margin-bottom:3px}
+        .nudge-desc{font-size:11px;color:var(--m);line-height:1.5;margin-bottom:6px}
+        .nudge-hint{font-size:10px;font-weight:600;color:var(--c)}
+        .nudge-close{background:none;border:none;font-size:14px;color:#ccc;cursor:pointer;padding:0;flex-shrink:0}
+        .nudge-close:hover{color:#999}
+
+        /* ═══ CARD — Ultra Clean ═══ */
+        .card{padding:16px 18px;border-bottom:1px solid #f4f5f7;cursor:pointer;transition:all .15s;position:relative}
+        .card:hover{background:#f9fafb}
+        .card.active{background:#fff5f7;border-left:3px solid var(--c);padding-left:15px}
+        .card-r1{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:3px}
+        .card-price{font-size:21px;font-weight:800;color:var(--n);letter-spacing:-.5px;line-height:1}
+        .card-price span{font-size:11px;font-weight:500;color:var(--lt);margin-left:1px}
+        .card-src{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 2px #fff,0 0 0 3px var(--bd)}
+        .card-area{font-size:13px;font-weight:600;color:var(--n);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
+        .card-type{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.03em;margin-right:4px}
+        .ct-mate{background:#ffe8ec;color:var(--c)}.ct-pg{background:#fff3e0;color:#e67e22}
+        .card-sub{font-size:11px;color:var(--m)}
+        .card-dist{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:12px;margin-top:5px}
+        .dist-near{background:var(--g-bg);color:var(--g)}
+        .dist-mid{background:var(--y-bg);color:var(--y)}
+        .dist-far{background:var(--r-bg);color:var(--r-clr)}
+        /* Actions on hover only */
+        .card-acts{display:none;position:absolute;right:14px;top:50%;transform:translateY(-50%);gap:4px;padding:3px;background:#fff;border-radius:10px;box-shadow:var(--shadow-md);border:1px solid var(--bd)}
+        .card:hover .card-acts{display:flex}
+        .ca{padding:7px 12px;border-radius:7px;font-size:10.5px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .12s;letter-spacing:.01em}
+        .ca-p{background:var(--n);color:#fff}.ca-p:hover{background:var(--c)}
+        .ca-s{background:var(--bg);color:var(--m)}.ca-s:hover{background:var(--bd)}
+
+        /* ═══ MAP ═══ */
+        .map-area{flex:1;display:flex;min-width:0;overflow:hidden;position:relative}
+        #map{flex:1;z-index:0;min-width:0}
+        .price-marker{background:#fff;border:2px solid var(--n);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.12);transition:.15s;cursor:pointer}
+        .price-marker:hover,.price-marker.active{background:var(--n);color:#fff;transform:scale(1.15);z-index:999!important}
+        .price-marker.mate{border-color:var(--c)}
+        .price-marker.mate:hover,.price-marker.mate.active{background:var(--c)}
+        .map-legend{position:absolute;top:12px;right:12px;z-index:600;display:none}
+        .legend-toggle{background:#fff;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12);border:1px solid #eee;margin-left:auto}
+        .legend-toggle:hover{background:#f8f8fa}
+        .map-legend:hover .legend-body{display:block}
+        .legend-body{display:none;background:#fff;border-radius:10px;padding:12px 14px;box-shadow:0 4px 16px rgba(0,0,0,.12);border:1px solid #eee;margin-top:6px;min-width:140px}
+        .legend-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#999;margin-bottom:8px}
+        .legend-item{display:flex;align-items:center;gap:8px;font-size:12px;color:#555;margin-bottom:6px}
+
+        /* ═══ SIDE PANEL (detail view) ═══ */
+        .side-panel{position:absolute;top:12px;right:12px;bottom:12px;width:340px;background:#fff;border-radius:var(--r);box-shadow:var(--shadow-lg);border:1px solid var(--bd);z-index:50;display:flex;flex-direction:column;overflow:hidden;transform:translateX(calc(100% + 24px));transition:transform .25s ease;pointer-events:none}
+        .side-panel.open{transform:translateX(0);pointer-events:auto}
+        .sp-hdr{padding:20px 20px 16px;border-bottom:1px solid var(--bd);flex-shrink:0;position:relative}
+        .sp-close{position:absolute;top:16px;right:16px;width:30px;height:30px;background:var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid var(--bd);font-size:13px;color:var(--m);font-family:inherit;transition:all .15s}
+        .sp-close:hover{background:#fee;color:var(--c);border-color:#fecaca}
+        .sp-price{font-size:26px;font-weight:800;color:var(--n);letter-spacing:-.5px;line-height:1}
+        .sp-price span{font-size:14px;font-weight:500;color:var(--lt)}
+        .sp-area{font-size:15px;font-weight:600;color:var(--n);margin-top:6px}
+        .sp-body{flex:1;overflow-y:auto;padding:16px 20px}
+        .sp-sec{margin-bottom:18px}
+        .sp-sec-t{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--lt);margin-bottom:8px}
+        .sp-tags{display:flex;gap:6px;flex-wrap:wrap}
+        .sp-tag{font-size:11px;font-weight:600;background:var(--bg);color:var(--m);border-radius:6px;padding:5px 10px}
+        .sp-raw{background:var(--bg);border-radius:var(--rs);padding:14px;font-size:12.5px;color:var(--m);line-height:1.65;border:1px solid var(--bd)}
+        .sp-acts{padding:16px 20px;border-top:1px solid var(--bd);display:flex;gap:8px;flex-shrink:0}
+        .sp-btn{flex:1;padding:12px;border-radius:10px;font-size:12.5px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all .15s;text-align:center;letter-spacing:.01em}
+        .sp-btn-p{background:var(--n);color:#fff}.sp-btn-p:hover{background:var(--c);transform:translateY(-1px);box-shadow:0 4px 12px rgba(255,56,92,.2)}
+        .sp-btn-s{background:var(--bg);color:var(--n);border:1.5px solid var(--bd)}.sp-btn-s:hover{background:var(--bd)}
+
+        /* ═══ EMPTY / ONBOARDING ═══ */
+        .empty{text-align:center;padding:40px 20px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+        .empty-icon{font-size:36px;margin-bottom:8px}
+        .empty-title{font-size:16px;font-weight:700;margin-bottom:4px}
+        .empty-sub{font-size:13px;color:#999;max-width:260px}
+        .empty-reset{margin-top:12px;background:var(--c);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+        .onboarding{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:10;max-width:440px;padding:20px}
+        .onboarding h2{font-size:22px;font-weight:800;margin-bottom:8px}
+        .onboarding p{color:#888;font-size:14px;margin-bottom:20px}
+
+        /* Skeleton */
+        .skel-card{background:#fff;border-radius:var(--r);padding:16px;margin-bottom:1px;border-bottom:1px solid #f3f3f5}
+        .skel-line{height:14px;background:#f0f0f4;border-radius:6px;margin-bottom:10px;animation:shimmer 1.5s infinite}
+        .w60{width:60%}.w80{width:80%}.w40{width:40%}
+        @keyframes shimmer{0%{opacity:.6}50%{opacity:1}100%{opacity:.6}}
+
+        /* Leaflet popup overrides */
+        .leaflet-popup-content-wrapper{border-radius:12px!important;box-shadow:0 6px 24px rgba(0,0,0,.12)!important;padding:0!important}
+        .leaflet-popup-content{margin:0!important;padding:12px 14px!important;font-family:'Inter',sans-serif!important}
+        .leaflet-popup-tip{display:none}
+
+        /* Scrollbar */
+        ::-webkit-scrollbar{width:5px;height:5px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:#ddd;border-radius:3px}
+        *{scrollbar-width:thin;scrollbar-color:#ddd transparent}
+    </style>
+</head>
+<body>
+
+<!-- ═══ LANDING PAGE — Hero + Form ═══ -->
+<div class="landing" id="landing">
+    <div class="land-wrap">
+        <div class="land-hero">
+            <div class="land-hero-logo">Rent<em>Scout</em></div>
+            <h1>Stop juggling 5 tabs.<br>Search once.</h1>
+            <p>RentScout searches NoBroker, 99acres, Housing.com & Facebook groups in parallel — deduplicates, ranks by distance to your office, and shows everything on one map.</p>
+            <div class="land-features">
+                <div class="land-feat"><div class="land-feat-icon" style="background:#fff3e0">🔍</div> 4 sources searched in parallel</div>
+                <div class="land-feat"><div class="land-feat-icon" style="background:#e8f5e9">📍</div> Distance from your office on every listing</div>
+                <div class="land-feat"><div class="land-feat-icon" style="background:#e3f2fd">🗺️</div> Map view with smart clustering</div>
+                <div class="land-feat"><div class="land-feat-icon" style="background:#fce4ec">📋</div> One-click message to landlord</div>
+            </div>
+        </div>
+        <div class="land-form">
+            <div class="steps-visual">
+                <div class="sv-step active" id="sv1"><div class="sv-num">1</div><div class="sv-label">Configure</div></div>
+                <div class="sv-line"></div>
+                <div class="sv-step" id="sv2"><div class="sv-num">2</div><div class="sv-label">Searching</div></div>
+                <div class="sv-line"></div>
+                <div class="sv-step" id="sv3"><div class="sv-num">3</div><div class="sv-label">Explore</div></div>
+            </div>
+            <h3>🏠 What are you looking for?</h3>
+            <div class="l-row">
+                <div class="l-field">
+                    <div class="l-label">City</div>
+                    <select class="l-select" id="l-city">
+                        <option value="Bangalore">Bangalore</option>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Delhi">Delhi</option>
+                        <option value="Hyderabad">Hyderabad</option>
+                        <option value="Pune">Pune</option>
+                        <option value="Chennai">Chennai</option>
+                    </select>
+                </div>
+            </div>
+            <div class="l-row">
+                <div class="l-field">
+                    <div class="l-label">Budget (₹/month)</div>
+                    <div style="display:flex;gap:8px">
+                        <input class="l-input" id="l-min" type="number" placeholder="Min (e.g. 15000)">
+                        <input class="l-input" id="l-max" type="number" placeholder="Max (e.g. 40000)">
+                    </div>
+                </div>
+            </div>
+            <div class="l-row">
+                <div class="l-field">
+                    <div class="l-label">Bedrooms</div>
+                    <div class="l-chips" id="l-bhk-chips">
+                        <div class="l-chip active" data-bhk="">Any</div>
+                        <div class="l-chip" data-bhk="1">1 BHK</div>
+                        <div class="l-chip" data-bhk="2">2 BHK</div>
+                        <div class="l-chip" data-bhk="3">3 BHK</div>
+                        <div class="l-chip" data-bhk="4">4+</div>
+                    </div>
+                </div>
+            </div>
+            <button class="l-go" id="l-go" onclick="startLandingSearch()">🔍 Find Listings</button>
+            <div class="l-prog-bar" id="l-prog-bar"><div class="l-prog-fill" id="l-prog-fill"></div></div>
+            <div class="l-prog-label" id="l-prog-label"></div>
+        </div>
+    </div>
+    <div class="landing-footer">Searches NoBroker, 99acres, Housing.com & Facebook groups</div>
+</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="topbar">
+    <div class="logo">Rent<em>Scout</em></div>
+    <div class="search-bar">
+        <select class="sb-select" id="sb-city">
+            <option value="Bangalore">Bangalore</option>
+            <option value="Mumbai">Mumbai</option>
+            <option value="Delhi">Delhi</option>
+            <option value="Hyderabad">Hyderabad</option>
+            <option value="Pune">Pune</option>
+            <option value="Chennai">Chennai</option>
+        </select>
+        <div class="sb-sep"></div>
+        <input class="sb-field" id="sb-area" placeholder="Area (optional)...">
+        <button class="sb-btn" id="search-btn" onclick="startMultiSearch()">🔍 Search</button>
+    </div>
+    <div class="scrape-status" id="scrape-status"></div>
+    <div class="tb-sep"></div>
+    <!-- Location input -->
+    <div class="loc-single" id="loc-single">
+        <span style="font-size:14px;flex-shrink:0">📍</span>
+        <input id="loc-input" placeholder="Your office or home address…">
+        <span class="loc-check">✓</span>
+        <div class="loc-suggest" id="loc-suggest"></div>
+    </div>
+    <!-- Radius pills — inline, visible when location is set -->
+    <div class="radius-inline hidden" id="radius-inline">
+        <div class="rpill on" data-km="0" onclick="selectInlineRadius(this)">Any</div>
+        <div class="rpill" data-km="3" onclick="selectInlineRadius(this)">3 km</div>
+        <div class="rpill" data-km="5" onclick="selectInlineRadius(this)">5 km</div>
+        <div class="rpill" data-km="10" onclick="selectInlineRadius(this)">10 km</div>
+    </div>
+    <div class="tb-sep"></div>
+    <!-- Quick filter pills -->
+    <div class="qpill" id="qp-bhk" data-beds="" onclick="cycleQuickBhk()">Any BHK</div>
+    <div class="qpill" id="qp-budget" onclick="toggleQuickBudget()">Budget</div>
+    <div class="qpill" id="qp-furn" data-furn="" onclick="cycleQuickFurn()">Furnishing</div>
+    <!-- More filters -->
+    <div style="position:relative" id="mf-wrap">
+        <div class="mf-btn" id="mf-btn" onclick="toggleMoreFilters()">More filters ▾</div>
+        <div class="mf-dropdown" id="mf-dropdown">
+            <button class="mf-close" onclick="toggleMoreFilters()">✕</button>
+            <div class="mf-title">Type</div>
+            <div class="mf-row" id="type-chips">
+                <div class="qpill active" data-type="" onclick="selectChipGroup(this,'type-chips','type')">All</div>
+                <div class="qpill" data-type="full_flat" onclick="selectChipGroup(this,'type-chips','type')">Flat</div>
+                <div class="qpill" data-type="flatmate" onclick="selectChipGroup(this,'type-chips','type')">Flatmate</div>
+                <div class="qpill" data-type="pg" onclick="selectChipGroup(this,'type-chips','type')">PG</div>
+            </div>
+            <div class="mf-title">Budget range</div>
+            <div style="display:flex;gap:8px;margin-bottom:14px">
+                <input class="mf-input" id="f-min" type="number" placeholder="₹ Min">
+                <input class="mf-input" id="f-max" type="number" placeholder="₹ Max">
+            </div>
+            <div class="mf-title">Furnished</div>
+            <div class="mf-row" id="furn-chips">
+                <div class="qpill active" data-furn="" onclick="selectChipGroup(this,'furn-chips','furn')">Any</div>
+                <div class="qpill" data-furn="furnished" onclick="selectChipGroup(this,'furn-chips','furn')">Furnished</div>
+                <div class="qpill" data-furn="semi-furnished" onclick="selectChipGroup(this,'furn-chips','furn')">Semi</div>
+                <div class="qpill" data-furn="unfurnished" onclick="selectChipGroup(this,'furn-chips','furn')">Unfurnished</div>
+            </div>
+            <div class="mf-title">Sources</div>
+            <div class="mf-row" id="src-chips">
+                <div class="qpill active" data-src="" onclick="selectSourceChip(this)">All</div>
+                <div class="qpill" data-src="nobroker" style="color:var(--nb)" onclick="selectSourceChip(this)">NoBroker</div>
+                <div class="qpill" data-src="99acres" style="color:var(--ac)" onclick="selectSourceChip(this)">99acres</div>
+                <div class="qpill" data-src="housing" style="color:var(--ho)" onclick="selectSourceChip(this)">Housing</div>
+                <div class="qpill" data-src="facebook" style="color:var(--fb)" onclick="selectSourceChip(this)">Facebook</div>
+            </div>
+            <div class="mf-divider"></div>
+            <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer">
+                <input type="checkbox" id="dedup-toggle" onchange="applyFilters()" style="accent-color:var(--c)"> Hide duplicate listings
+            </label>
+        </div>
+    </div>
+    <div class="flex1"></div>
+    <div class="topbar-stat" id="topbar-stat"></div>
+</div>
+
+<div class="main">
+    <!-- List panel -->
+    <div class="list-panel">
+        <div class="cl-notice" id="cl-notice">
+            📍 <strong id="cl-area-name">Area</strong> · <span id="cl-count">0</span> listings
+            <button onclick="clearClusterFilter()">✕</button>
+        </div>
+        <div class="nudge" id="nudge">
+            <div class="nudge-icon">📍</div>
+            <div class="nudge-body">
+                <div class="nudge-title">Set your location</div>
+                <div class="nudge-desc">Add your office or home address to see distance on every listing and sort by nearest.</div>
+                <div class="nudge-hint">📍 ← Type your address above</div>
+            </div>
+            <button class="nudge-close" onclick="dismissNudge()">✕</button>
+        </div>
+        <div class="list-hdr">
+            <div class="list-hdr-t" id="list-count">Loading...</div>
+            <select class="sort-sel" id="sort-sel" onchange="changeSort(this.value)">
+                <option value="newest">Newest</option>
+                <option value="nearest">Nearest</option>
+                <option value="price_low">Price ↑</option>
+                <option value="price_high">Price ↓</option>
+            </select>
+        </div>
+        <div class="list-scroll" id="list-scroll"></div>
+    </div>
+
+    <!-- Map + Side Panel -->
+    <div class="map-area">
+        <div id="map"></div>
+        <div class="map-legend" id="map-legend">
+            <div class="legend-toggle" title="Map Legend">🗺️</div>
+            <div class="legend-body">
+                <div class="legend-title">Legend</div>
+                <div class="legend-item"><div style="background:var(--n);width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);margin-right:4px"></div>Full Flat</div>
+                <div class="legend-item"><div style="background:var(--c);width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);margin-right:4px"></div>Flatmate / PG</div>
+                <div class="legend-item"><div style="background:#6C5CE7;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);margin-right:4px;font-size:8px;display:flex;align-items:center;justify-content:center">🏢</div>Office</div>
+                <div class="legend-item"><div style="background:var(--g);width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);margin-right:4px;font-size:8px;display:flex;align-items:center;justify-content:center">🏠</div>Home</div>
+            </div>
+        </div>
+        <div class="onboarding" id="onboarding" style="display:none">
+            <h2>Find your next home</h2>
+            <p>Search across NoBroker, 99acres, Housing.com & Facebook groups — all in one place.</p>
+        </div>
+        <!-- Side panel for detail view -->
+        <div class="side-panel" id="side-panel">
+            <div class="sp-hdr">
+                <button class="sp-close" onclick="closeDetailPanel()">✕</button>
+                <div class="sp-price" id="sp-price"></div>
+                <div class="sp-area" id="sp-area"></div>
+            </div>
+            <div class="sp-body">
+                <div class="sp-sec"><div class="sp-sec-t">Details</div><div class="sp-tags" id="sp-tags"></div></div>
+                <div class="sp-sec"><div class="sp-sec-t">Distance</div><div class="sp-tags" id="sp-dists"></div></div>
+                <div class="sp-sec"><div class="sp-sec-t">Original Post</div><div class="sp-raw" id="sp-raw"></div></div>
+            </div>
+            <div class="sp-acts">
+                <button class="sp-btn sp-btn-s" id="sp-copy-btn" onclick="copyMessageFromPanel()">📋 Copy Message</button>
+                <a class="sp-btn sp-btn-p" id="sp-view-btn" href="#" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">View Listing →</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ─── Landing Page Logic ───
+document.querySelectorAll('#l-bhk-chips .l-chip').forEach(c => {
+    c.addEventListener('click', () => {
+        document.querySelectorAll('#l-bhk-chips .l-chip').forEach(x => x.classList.remove('active'));
+        c.classList.add('active');
+    });
+});
+
+function getLandingBedrooms() {
+    const active = document.querySelector('#l-bhk-chips .l-chip.active');
+    const val = active?.dataset.bhk;
+    if (!val) return null;
+    return [parseInt(val)];
+}
+
+function startLandingSearch() {
+    if (landingSearching) return;
+    landingSearching = true;
+    const city = document.getElementById('l-city').value;
+    const budgetMin = document.getElementById('l-min').value ? parseInt(document.getElementById('l-min').value) : null;
+    const budgetMax = document.getElementById('l-max').value ? parseInt(document.getElementById('l-max').value) : null;
+    const bedrooms = getLandingBedrooms();
+
+    const btn = document.getElementById('l-go');
+    btn.disabled = true;
+    btn.textContent = '🔍 Searching across sources...';
+
+    document.getElementById('l-prog-bar').style.display = 'block';
+    document.getElementById('l-prog-label').style.display = 'block';
+    const fill = document.getElementById('l-prog-fill');
+    const label = document.getElementById('l-prog-label');
+
+    document.getElementById('sv1').classList.remove('active');
+    document.getElementById('sv1').classList.add('done');
+    document.getElementById('sv2').classList.add('active');
+
+    document.getElementById('sb-city').value = city;
+
+    const body = { city, budget_min: budgetMin, budget_max: budgetMax, bedrooms, max_results: 50 };
+
+    fetch('/api/scrape/multi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) {
+            label.textContent = data.error;
+            label.style.color = '#e74c3c';
+            btn.disabled = false;
+            btn.textContent = '🔍 Find Listings';
+            return;
+        }
+        pollLandingJob(data.job_id, fill, label, data.sources || []);
+    })
+    .catch(() => {
+        label.textContent = 'Failed to connect to server';
+        label.style.color = '#e74c3c';
+        btn.disabled = false;
+        btn.textContent = '🔍 Find Listings';
+        landingSearching = false;
+        document.getElementById('l-prog-bar').style.display = 'none';
+    });
+}
+
+function pollLandingJob(jobId, fill, label, sources) {
+    const statusMap = {
+        queued: { pct: '10%', text: 'Starting search...' },
+        scraping: { pct: '40%', text: 'Searching ' + sources.join(', ') + '...' },
+        extracting: { pct: '65%', text: 'Extracting listing details...' },
+        geocoding: { pct: '85%', text: 'Mapping locations...' },
+    };
+
+    const poll = async () => {
+        const resp = await fetch('/api/scrape/' + jobId);
+        const job = await resp.json();
+
+        if (job.status === 'done') {
+            fill.style.width = '100%';
+            const r = job.result || {};
+            const total = r.total_listings || r.total_saved || r.listings_saved || 0;
+            const srcInfo = r.sources || {};
+            const srcSummary = Object.entries(srcInfo).map(([s, info]) => s + ': ' + (info.listings || 0)).join(', ');
+            label.textContent = total + ' listings found' + (srcSummary ? ' (' + srcSummary + ')' : '') + ' ✓';
+
+            document.getElementById('sv2').classList.remove('active');
+            document.getElementById('sv2').classList.add('done');
+            document.getElementById('sv3').classList.add('active');
+
+            applyFilters();
+            fetchStats();
+            setTimeout(() => transitionToDashboard(), 800);
+            return;
+        }
+
+        if (job.status === 'error') {
+            fill.style.width = '100%';
+            fill.style.background = '#e74c3c';
+            label.textContent = 'Error: ' + (job.error || 'Something went wrong');
+            label.style.color = '#e74c3c';
+            document.getElementById('l-go').disabled = false;
+            document.getElementById('l-go').textContent = '🔍 Find Listings';
+            return;
+        }
+
+        const s = statusMap[job.status] || { pct: '15%', text: job.status };
+        fill.style.width = s.pct;
+        label.textContent = s.text;
+
+        if (job.status === 'extracting' || job.status === 'geocoding') {
+            document.getElementById('sv2').classList.remove('active');
+            document.getElementById('sv2').classList.add('done');
+            document.getElementById('sv3').classList.add('active');
+        }
+
+        setTimeout(poll, 2000);
+    };
+    poll();
+}
+
+function transitionToDashboard() {
+    document.getElementById('landing').classList.add('exit');
+    setTimeout(() => { document.getElementById('landing').style.display = 'none'; }, 600);
+}
+
+async function checkExistingListings() {
+    try {
+        const resp = await fetch('/api/stats');
+        const stats = await resp.json();
+        if (stats.total_listings > 0) document.getElementById('landing').style.display = 'none';
+    } catch (e) {}
+}
+
+// ─── State ───
+let listings = [];
+let markers = [];
+let markerCluster = null;
+let officeLatLng = null;
+let homeLatLng = null;
+let officeMarker = null;
+let homeMarker = null;
+let radiusCircle = null;
+let radiusKm = 0;
+let sortBy = 'newest';
+let activeCardId = null;
+let clusterFilterIds = null;
+let nudgeDismissed = false;
+let selectedPanelListing = null;
+let locType = 'office'; // single location mode: 'office' or 'home'
+let landingSearching = false; // guard against double-click
+
+const map = L.map('map', { zoomControl: false }).setView([12.9716, 77.5946], 12);
+L.control.zoom({ position: 'bottomright' }).addTo(map);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '\u00a9 OpenStreetMap \u00a9 CARTO', maxZoom: 19
+}).addTo(map);
+
+// ─── Helpers ───
+function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function formatPrice(p) {
+    if (!p) return 'Price N/A';
+    if (p >= 100000) { const l = p / 100000; return '\u20B9' + (l % 1 === 0 ? l : l.toFixed(1)) + 'L'; }
+    if (p >= 1000) return '\u20B9' + Math.round(p / 1000) + 'K';
+    return '\u20B9' + p;
+}
+function escJs(s) { return s ? s.replace(/\\/g, '\\\\').replace(/'/g, "\\'") : ''; }
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+function distClass(km) { return km < 3 ? 'dist-near' : km <= 5 ? 'dist-mid' : 'dist-far'; }
+
+const sourceColors = { nobroker: '#FF6B35', '99acres': '#E91E63', housing: '#2196F3', facebook: '#1877F2' };
+const sourceLabels = { nobroker: 'NoBroker', '99acres': '99acres', housing: 'Housing.com', facebook: 'Facebook' };
+
+function clearMarkers() {
+    markers.forEach(m => { m.closePopup(); m.off(); });
+    if (markerCluster) { map.removeLayer(markerCluster); markerCluster = null; }
+    markers = [];
+}
+
+// ─── Render ───
+function render() {
+    clearMarkers();
+    const bounds = [];
+
+    listings.forEach(l => {
+        l._distOffice = (officeLatLng && l.latitude && l.longitude) ? haversine(officeLatLng[0], officeLatLng[1], l.latitude, l.longitude) : null;
+        l._distHome = (homeLatLng && l.latitude && l.longitude) ? haversine(homeLatLng[0], homeLatLng[1], l.latitude, l.longitude) : null;
+        const dists = [l._distOffice, l._distHome].filter(d => d !== null);
+        l._dist = dists.length ? Math.min(...dists) : null;
+    });
+    const ref = officeLatLng || homeLatLng;
+
+    let filtered = listings;
+    if (radiusKm > 0 && ref) {
+        filtered = listings.filter(l => l._dist !== null && l._dist <= radiusKm);
+    }
+
+    // Apply cluster filter
+    if (clusterFilterIds) {
+        filtered = filtered.filter(l => clusterFilterIds.includes(l.raw_post_id));
+    }
+
+    // Sort
+    if (sortBy === 'nearest' && ref) {
+        filtered.sort((a, b) => (a._dist ?? 999) - (b._dist ?? 999));
+    } else if (sortBy === 'price_low') {
+        filtered.sort((a, b) => (a.price ?? 999999) - (b.price ?? 999999));
+    } else if (sortBy === 'price_high') {
+        filtered.sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
+    }
+
+    // Map markers
+    markerCluster = L.markerClusterGroup({
+        maxClusterRadius: 40,
+        showCoverageOnHover: false,
+        spiderfyOnMaxZoom: false,
+        zoomToBoundsOnClick: false,
+        iconCreateFunction: function(cluster) {
+            const count = cluster.getChildCount();
+            return L.divIcon({
+                className: '',
+                html: '<div style="background:#1a1a2e;color:#fff;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;font-family:Inter,sans-serif;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.2);border:2px solid #fff;text-align:center">' + count + ' listings</div>',
+                iconSize: [80, 28], iconAnchor: [40, 14]
+            });
+        }
+    });
+
+    // Cluster click handler — filter list to cluster listings
+    markerCluster.on('clusterclick', function(e) {
+        const childMarkers = e.layer.getAllChildMarkers();
+        const ids = childMarkers.map(m => m._lid).filter(Boolean);
+        if (ids.length) {
+            clusterFilterIds = ids;
+            const clusterListings = listings.filter(l => ids.includes(l.raw_post_id));
+            // Find most common area name in cluster
+            const areaCounts = {};
+            clusterListings.forEach(l => { const a = (l.area || l.location_text || 'Area').split(',')[0]; areaCounts[a] = (areaCounts[a] || 0) + 1; });
+            const areaName = Object.entries(areaCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Area';
+            document.getElementById('cl-area-name').textContent = areaName.split(',')[0];
+            document.getElementById('cl-count').textContent = clusterListings.length;
+            document.getElementById('cl-notice').classList.add('show');
+            render();
+        }
+        map.fitBounds(e.layer.getBounds(), { padding: [60, 60], maxZoom: 15 });
+    });
+
+    filtered.forEach((l) => {
+        if (!l.latitude || !l.longitude) return;
+        const latlng = [l.latitude, l.longitude];
+        bounds.push(latlng);
+        const isMate = l.listing_type === 'flatmate' || l.listing_type === 'pg';
+        const icon = L.divIcon({
+            className: '',
+            html: '<div class="price-marker ' + (isMate ? 'mate' : '') + '" data-id="' + esc(l.raw_post_id) + '">' + formatPrice(l.price) + '</div>',
+            iconSize: [60, 28], iconAnchor: [30, 14]
+        });
+        const marker = L.marker(latlng, { icon });
+        marker.on('click', () => {
+            highlightCard(l.raw_post_id);
+            openDetailPanel(l);
+        });
+        marker.on('mouseover', () => {
+            const el = marker.getElement();
+            if (el) el.querySelector('.price-marker')?.classList.add('active');
+            const card = document.querySelector('.card[data-id="' + l.raw_post_id + '"]');
+            if (card) { card.classList.add('active'); card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+        });
+        marker.on('mouseout', () => {
+            const el = marker.getElement();
+            if (el) el.querySelector('.price-marker')?.classList.remove('active');
+            const card = document.querySelector('.card[data-id="' + l.raw_post_id + '"]');
+            if (card && activeCardId !== l.raw_post_id) card.classList.remove('active');
+        });
+        marker._lid = l.raw_post_id;
+        markerCluster.addLayer(marker);
+        markers.push(marker);
+    });
+    map.addLayer(markerCluster);
+    map.invalidateSize({ animate: false });
+    if (bounds.length && !radiusKm && !clusterFilterIds) map.fitBounds(bounds, { padding: [40, 40] });
+
+    // Render cards
+    const scroll = document.getElementById('list-scroll');
+    const onboarding = document.getElementById('onboarding');
+
+    if (!listings.length) {
+        scroll.innerHTML = '<div class="empty"><div class="empty-icon">🏠</div><div class="empty-title">No listings yet</div><div class="empty-sub">Set your city and budget, then click Search to find listings across all sources</div></div>';
+        if (onboarding) onboarding.style.display = '';
+    } else if (!filtered.length) {
+        scroll.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No matches</div><div class="empty-sub">Your filters are too narrow — ' + listings.length + ' listing' + (listings.length !== 1 ? 's' : '') + ' hidden</div><button class="empty-reset" onclick="resetFilters()">Reset Filters</button></div>';
+        if (onboarding) onboarding.style.display = 'none';
+    } else {
+        if (onboarding) onboarding.style.display = 'none';
+        scroll.innerHTML = filtered.map((l) => {
+            const isMate = l.listing_type === 'flatmate';
+            const isPG = l.listing_type === 'pg';
+            const typeHtml = isMate ? '<span class="card-type ct-mate">Flatmate</span>' : isPG ? '<span class="card-type ct-pg">PG</span>' : '';
+            let distHtml = '';
+            if (l._distOffice !== null) distHtml += '<div class="card-dist ' + distClass(l._distOffice) + '">🏢 ' + l._distOffice.toFixed(1) + ' km</div>';
+            if (l._distHome !== null) distHtml += '<div class="card-dist ' + distClass(l._distHome) + '">🏠 ' + l._distHome.toFixed(1) + ' km</div>';
+            const viewLink = l.post_url || '';
+            const safeId = escJs(l.raw_post_id);
+            return '<div class="card' + (activeCardId === l.raw_post_id ? ' active' : '') + '" data-id="' + esc(l.raw_post_id) + '" tabindex="0" role="button" onmouseenter="hoverCard(\'' + safeId + '\')" onmouseleave="unhoverCard(\'' + safeId + '\')" onclick="focusCard(\'' + safeId + '\')" onkeydown="if(event.key===\'Enter\')focusCard(\'' + safeId + '\')">'
+                + '<div class="card-r1"><div class="card-price">' + formatPrice(l.price) + '<span>/mo</span></div><div class="card-src" style="background:' + (sourceColors[l.source] || '#999') + '" title="' + esc(sourceLabels[l.source] || l.source || 'Unknown') + '"></div></div>'
+                + '<div class="card-area">' + typeHtml + esc(l.area || l.location_text || 'Unknown') + '</div>'
+                + '<div class="card-sub">' + (l.bedrooms != null ? l.bedrooms + ' BHK' : '') + (l.furnished ? ' \u00b7 ' + esc(l.furnished) : '') + '</div>'
+                + distHtml
+                + '<div class="card-acts">'
+                + '<button class="ca ca-s" onclick="event.stopPropagation();copyMessage(\'' + safeId + '\', this)">📋 Copy</button>'
+                + (viewLink ? '<a class="ca ca-p" href="' + encodeURI(viewLink) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="text-decoration:none">View →</a>' : '')
+                + '</div></div>';
+        }).join('');
+    }
+
+    document.getElementById('list-count').textContent = filtered.length + ' result' + (filtered.length !== 1 ? 's' : '');
+    updateNudge();
+    updateLegend();
+    updateTopbarStat(filtered);
+}
+
+// ─── Card interactions ───
+function hoverCard(id) {
+    const m = markers.find(m => m._lid === id);
+    const el = m?.getElement();
+    if (el) el.querySelector('.price-marker')?.classList.add('active');
+}
+function unhoverCard(id) {
+    const m = markers.find(m => m._lid === id);
+    const el = m?.getElement();
+    if (el) el.querySelector('.price-marker')?.classList.remove('active');
+}
+function focusCard(id) {
+    const m = markers.find(m => m._lid === id);
+    if (m) { map.setView(m.getLatLng(), 15); m.openPopup(); }
+    highlightCard(id);
+    const listing = listings.find(l => l.raw_post_id === id);
+    if (listing) openDetailPanel(listing);
+}
+function highlightCard(id) {
+    if (activeCardId) document.querySelector('.card[data-id="' + activeCardId + '"]')?.classList.remove('active');
+    activeCardId = id;
+    const card = document.querySelector('.card[data-id="' + id + '"]');
+    if (card) { card.classList.add('active'); card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+}
+
+// ─── Side Panel ───
+function openDetailPanel(l) {
+    selectedPanelListing = l;
+    const panel = document.getElementById('side-panel');
+    document.getElementById('sp-price').innerHTML = formatPrice(l.price) + '<span>/mo</span>';
+    document.getElementById('sp-area').textContent = l.area || l.location_text || 'Unknown';
+
+    let tagsHtml = '';
+    if (l.bedrooms != null) tagsHtml += '<div class="sp-tag">' + l.bedrooms + ' BHK</div>';
+    if (l.furnished) tagsHtml += '<div class="sp-tag">' + esc(l.furnished) + '</div>';
+    if (l.source) tagsHtml += '<div class="sp-tag" style="background:' + (sourceColors[l.source] || '#eee') + '15;color:' + (sourceColors[l.source] || '#999') + '">' + esc(sourceLabels[l.source] || l.source) + '</div>';
+    if (l.listing_type) tagsHtml += '<div class="sp-tag">' + esc(l.listing_type === 'full_flat' ? 'Full Flat' : l.listing_type === 'flatmate' ? 'Flatmate' : 'PG') + '</div>';
+    if (l.also_on && l.also_on.length) tagsHtml += '<div class="sp-tag">Also on: ' + l.also_on.join(', ') + '</div>';
+    document.getElementById('sp-tags').innerHTML = tagsHtml;
+
+    let distHtml = '';
+    const ref = officeLatLng || homeLatLng;
+    if (l._dist !== null && ref) distHtml = '<div class="sp-tag ' + distClass(l._dist) + '" style="border:none">📍 ' + l._dist.toFixed(1) + ' km away</div>';
+    if (!distHtml) distHtml = '<div class="sp-tag">Set location above to see distance</div>';
+    document.getElementById('sp-dists').innerHTML = distHtml;
+
+    const rawText = l.raw_text;
+    if (rawText) {
+        document.getElementById('sp-raw').textContent = rawText;
+        document.getElementById('sp-raw').parentElement.style.display = '';
+    } else {
+        document.getElementById('sp-raw').parentElement.style.display = 'none';
+    }
+
+    const viewBtn = document.getElementById('sp-view-btn');
+    if (l.post_url) {
+        viewBtn.href = l.post_url;
+        viewBtn.textContent = 'View on ' + (sourceLabels[l.source] || 'source') + ' →';
+        viewBtn.style.display = '';
+    } else {
+        viewBtn.style.display = 'none';
+    }
+
+    document.getElementById('sp-copy-btn').textContent = '📋 Copy Message';
+    document.getElementById('sp-copy-btn').classList.remove('copied');
+
+    panel.classList.add('open');
+}
+
+function closeDetailPanel() {
+    document.getElementById('side-panel').classList.remove('open');
+    selectedPanelListing = null;
+}
+
+async function copyMessageFromPanel() {
+    if (!selectedPanelListing) return;
+    const btn = document.getElementById('sp-copy-btn');
+    btn.textContent = '⏳ Generating...';
+    try {
+        const resp = await fetch('/api/listings/' + selectedPanelListing.raw_post_id + '/message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_name: '' }),
+        });
+        const data = await resp.json();
+        if (data.message) {
+            try { await navigator.clipboard.writeText(data.message); } catch (e) {
+                const ta = document.createElement('textarea'); ta.value = data.message; ta.style.cssText = 'position:fixed;left:-9999px';
+                document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+            }
+            btn.textContent = '✓ Copied!';
+            setTimeout(() => { btn.textContent = '📋 Copy Message'; }, 2000);
+        } else {
+            btn.textContent = '❌ Failed';
+            setTimeout(() => { btn.textContent = '📋 Copy Message'; }, 2000);
+        }
+    } catch (e) {
+        btn.textContent = '❌ Failed';
+        setTimeout(() => { btn.textContent = '📋 Copy Message'; }, 2000);
+    }
+}
+
+// ─── Copy message from card hover button ───
+async function copyMessage(listingId, btn) {
+    btn.textContent = '⏳...';
+    btn.disabled = true;
+    try {
+        const resp = await fetch('/api/listings/' + listingId + '/message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_name: '' }),
+        });
+        const data = await resp.json();
+        if (data.message) {
+            try { await navigator.clipboard.writeText(data.message); } catch (e) {
+                const ta = document.createElement('textarea'); ta.value = data.message; ta.style.cssText = 'position:fixed;left:-9999px';
+                document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+            }
+            btn.textContent = '✓ Copied';
+            setTimeout(() => { btn.textContent = '📋 Copy'; btn.disabled = false; }, 2000);
+        } else {
+            btn.textContent = '❌ Fail';
+            setTimeout(() => { btn.textContent = '📋 Copy'; btn.disabled = false; }, 2000);
+        }
+    } catch (e) {
+        btn.textContent = '❌ Fail';
+        setTimeout(() => { btn.textContent = '📋 Copy'; btn.disabled = false; }, 2000);
+    }
+}
+
+// ─── Cluster filter ───
+function clearClusterFilter() {
+    clusterFilterIds = null;
+    document.getElementById('cl-notice').classList.remove('show');
+    render();
+}
+
+// ─── Fetch ───
+async function fetchListings(params = {}) {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => { if (v !== '' && v != null) q.set(k, v); });
+    try {
+        const resp = await fetch('/api/listings?' + q);
+        const data = await resp.json();
+        listings = data.listings;
+        render();
+    } catch (e) {
+        const scroll = document.getElementById('list-scroll');
+        scroll.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Failed to load listings</div><div class="empty-sub">Could not connect to the server. Check your connection and try again.</div><button class="empty-reset" onclick="applyFilters()">Retry</button></div>';
+        document.getElementById('list-count').textContent = 'Error';
+    }
+}
+
+async function fetchStats() {
+    try {
+        const resp = await fetch('/api/stats');
+        const s = await resp.json();
+        // Stats are used in topbar-stat, updated in render()
+    } catch (e) {}
+}
+
+function updateTopbarStat(filtered) {
+    const prices = filtered.filter(l => l.price).map(l => l.price);
+    const stat = document.getElementById('topbar-stat');
+    if (prices.length) {
+        stat.textContent = filtered.length + ' listings \u00b7 ' + formatPrice(Math.min(...prices)) + '\u2013' + formatPrice(Math.max(...prices));
+    } else {
+        stat.textContent = filtered.length + ' listings';
+    }
+}
+
+// ─── Filters ───
+function getActiveChipData(containerId, attr) {
+    return document.querySelector('#' + containerId + ' .active')?.dataset[attr] ?? '';
+}
+
+function getSelectedSources() {
+    const allChip = document.querySelector('#src-chips .qpill[data-src=""]');
+    if (allChip?.classList.contains('active')) return '';
+    const active = document.querySelectorAll('#src-chips .qpill.active[data-src]:not([data-src=""])');
+    if (!active.length) return '';
+    return Array.from(active).map(c => c.dataset.src).join(',');
+}
+
+function applyFilters() {
+    const dedup = document.getElementById('dedup-toggle').checked;
+    // Preserve cluster filter — only clear when user explicitly dismisses
+    fetchListings({
+        city: document.getElementById('sb-city').value,
+        area: document.getElementById('sb-area').value.trim(),
+        max_price: document.getElementById('f-max').value,
+        min_price: document.getElementById('f-min').value,
+        bedrooms: getActiveChipData('l-bhk-chips', 'bhk') || '', // reuse from quick pills or dropdown
+        listing_type: getActiveChipData('type-chips', 'type'),
+        furnished: getActiveChipData('furn-chips', 'furn'),
+        source: getSelectedSources(),
+        dedup: dedup ? 'true' : '',
+        type: 'supply',
+    });
+}
+
+// ─── Filter chip handlers ───
+function selectChipGroup(el, containerId, attr) {
+    document.querySelectorAll('#' + containerId + ' .qpill').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    applyFilters();
+}
+
+function selectSourceChip(el) {
+    if (el.dataset.src === '') {
+        // "All" clicked — deselect others
+        document.querySelectorAll('#src-chips .qpill').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+    } else {
+        // Individual source — deselect "All", toggle this
+        document.querySelector('#src-chips .qpill[data-src=""]').classList.remove('active');
+        el.classList.toggle('active');
+        // If nothing selected, reselect "All"
+        const anyActive = document.querySelectorAll('#src-chips .qpill.active[data-src]:not([data-src=""])');
+        if (!anyActive.length) document.querySelector('#src-chips .qpill[data-src=""]').classList.add('active');
+    }
+    applyFilters();
+}
+
+function selectRadiusChip(el) {
+    document.querySelectorAll('#radius-chips .qpill').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    radiusKm = parseInt(el.dataset.km) || 0;
+    updateRadius();
+    render();
+    map.invalidateSize({ animate: false });
+    if (radiusKm > 0 && radiusCircle) {
+        map.fitBounds(radiusCircle.getBounds(), { padding: [40, 40] });
+    } else if (radiusKm === 0 && markers.length) {
+        const b = markers.map(m => m.getLatLng());
+        if (officeLatLng) b.push(L.latLng(officeLatLng));
+        if (homeLatLng) b.push(L.latLng(homeLatLng));
+        map.fitBounds(L.latLngBounds(b), { padding: [40, 40] });
+    }
+}
+
+// Quick filter pill handlers
+function cycleQuickBhk() {
+    const el = document.getElementById('qp-bhk');
+    const vals = ['', '1', '2', '3'];
+    const labels = ['Any BHK', '1 BHK', '2 BHK', '3+ BHK'];
+    const cur = vals.indexOf(el.dataset.beds);
+    const next = (cur + 1) % vals.length;
+    el.dataset.beds = vals[next];
+    el.textContent = labels[next];
+    el.classList.toggle('active', vals[next] !== '');
+    applyFilters();
+}
+
+function toggleQuickBudget() {
+    const el = document.getElementById('qp-budget');
+    if (el.classList.contains('active')) {
+        el.classList.remove('active');
+        el.textContent = 'Budget';
+        document.getElementById('f-min').value = '';
+        document.getElementById('f-max').value = '';
+        applyFilters();
+    } else {
+        // Show more filters focused on budget
+        toggleMoreFilters();
+        document.getElementById('f-min').focus();
+    }
+}
+
+function cycleQuickFurn() {
+    const el = document.getElementById('qp-furn');
+    const vals = ['', 'furnished', 'semi-furnished', 'unfurnished'];
+    const labels = ['Furnishing', 'Furnished', 'Semi', 'Unfurnished'];
+    const cur = vals.indexOf(el.dataset.furn);
+    const next = (cur + 1) % vals.length;
+    el.dataset.furn = vals[next];
+    el.textContent = labels[next];
+    el.classList.toggle('active', vals[next] !== '');
+    // Sync the dropdown chips
+    document.querySelectorAll('#furn-chips .qpill').forEach(c => c.classList.toggle('active', c.dataset.furn === vals[next]));
+    applyFilters();
+}
+
+// Budget inputs in dropdown
+let _budgetTimer = null;
+document.getElementById('f-min')?.addEventListener('input', () => { clearTimeout(_budgetTimer); _budgetTimer = setTimeout(applyFilters, 600); });
+document.getElementById('f-max')?.addEventListener('input', () => { clearTimeout(_budgetTimer); _budgetTimer = setTimeout(applyFilters, 600); });
+document.getElementById('f-min')?.addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(_budgetTimer); applyFilters(); } });
+document.getElementById('f-max')?.addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(_budgetTimer); applyFilters(); } });
+
+// Area search debounce
+let _areaTimer = null;
+const sbArea = document.getElementById('sb-area');
+sbArea.addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(_areaTimer); applyFilters(); } });
+sbArea.addEventListener('input', () => { clearTimeout(_areaTimer); _areaTimer = setTimeout(applyFilters, 600); });
+
+// Sort
+function changeSort(val) {
+    const ref = officeLatLng || homeLatLng;
+    if (val === 'nearest' && !ref) {
+        // Can't sort by nearest without a location — nudge user
+        document.getElementById('loc-input').focus();
+        document.getElementById('loc-single').style.animation = 'pulse-border .6s ease';
+        setTimeout(() => document.getElementById('loc-single').style.animation = '', 600);
+        document.getElementById('sort-sel').value = sortBy; // revert dropdown
+        return;
+    }
+    sortBy = val;
+    render();
+}
+
+// More filters dropdown
+function toggleMoreFilters() {
+    const dd = document.getElementById('mf-dropdown');
+    dd.classList.toggle('open');
+    document.getElementById('mf-btn').classList.toggle('active', dd.classList.contains('open'));
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', function(e) {
+    const wrap = document.getElementById('mf-wrap');
+    const dd = document.getElementById('mf-dropdown');
+    if (dd.classList.contains('open') && !wrap.contains(e.target)) {
+        dd.classList.remove('open');
+        document.getElementById('mf-btn').classList.remove('active');
+    }
+});
+
+// ─── Multi-source search from dashboard ───
+async function startMultiSearch() {
+    const city = document.getElementById('sb-city').value;
+    const btn = document.getElementById('search-btn');
+    const status = document.getElementById('scrape-status');
+    btn.disabled = true;
+    btn.textContent = '⏳ ...';
+    status.style.display = 'flex';
+    status.innerHTML = '<div class="dot dot-scraping"></div> Starting search...';
+    showLoadingSkeleton();
+
+    try {
+        const resp = await fetch('/api/scrape/multi', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                city: city,
+                areas: document.getElementById('sb-area').value.trim() ? [document.getElementById('sb-area').value.trim()] : undefined,
+                max_results: 50,
+                budget_min: parseInt(document.getElementById('f-min').value) || undefined,
+                budget_max: parseInt(document.getElementById('f-max').value) || undefined,
+            }),
+        });
+        const data = await resp.json();
+        if (data.error) {
+            status.innerHTML = '<span style="color:#e74c3c">' + esc(data.error) + '</span>';
+            btn.disabled = false;
+            btn.textContent = '🔍 Search';
+            return;
+        }
+        pollSearchJob(data.job_id, data.sources || []);
+    } catch (e) {
+        status.innerHTML = '<span style="color:#e74c3c">Failed to connect</span>';
+        btn.disabled = false;
+        btn.textContent = '🔍 Search';
+    }
+}
+
+async function pollSearchJob(jobId, sources) {
+    const btn = document.getElementById('search-btn');
+    const status = document.getElementById('scrape-status');
+    const statusLabels = {
+        queued: 'Starting...',
+        scraping: 'Searching ' + (sources.length ? sources.join(', ') : 'sources') + '...',
+        extracting: 'Extracting details...',
+        geocoding: 'Mapping locations...',
+    };
+
+    const poll = async () => {
+        const resp = await fetch('/api/scrape/' + jobId);
+        const job = await resp.json();
+
+        if (job.status === 'done') {
+            const r = job.result || {};
+            const total = r.total_listings || r.total_saved || r.listings_saved || 0;
+            status.innerHTML = '<span style="color:var(--g)">✓ ' + total + ' listings found</span>';
+            btn.disabled = false;
+            btn.textContent = '🔍 Search';
+            applyFilters();
+            fetchStats();
+            setTimeout(() => { status.style.display = 'none'; }, 5000);
+            return;
+        }
+
+        if (job.status === 'error') {
+            status.innerHTML = '<span style="color:#e74c3c">Error: ' + esc(job.error || 'Unknown') + '</span>';
+            btn.disabled = false;
+            btn.textContent = '🔍 Search';
+            return;
+        }
+
+        const label = statusLabels[job.status] || job.status;
+        const dotClass = job.status === 'extracting' ? 'dot-extracting' : job.status === 'geocoding' ? 'dot-geocoding' : 'dot-scraping';
+        status.innerHTML = '<div class="dot ' + dotClass + '"></div> ' + label;
+        setTimeout(poll, 2000);
+    };
+    poll();
+}
+
+// ─── Geocoding / Autocomplete ───
+async function geocodeLocation(query, placeId) {
+    if (!query && !placeId) return { coords: null, formatted: null, error: null };
+    const params = new URLSearchParams();
+    if (placeId) params.set('place_id', placeId);
+    else params.set('q', query);
+    const resp = await fetch('/api/geocode?' + params);
+    const data = await resp.json();
+    if (data.error) return { coords: null, formatted: null, error: data.error };
+    return { coords: [data.lat, data.lng], formatted: data.formatted, error: null };
+}
+
+// ─── Location input logic ───
+async function resolveLocation(placeId) {
+    const input = document.getElementById('loc-input');
+    const container = document.getElementById('loc-single');
+    const result = await geocodeLocation(input.value, placeId);
+    officeLatLng = result.coords; homeLatLng = null;
+    if (result.coords) {
+        container.classList.add('resolved');
+        if (result.formatted) input.value = result.formatted.split(',')[0];
+        document.getElementById('radius-inline').classList.remove('hidden');
+    } else {
+        container.classList.remove('resolved');
+        document.getElementById('radius-inline').classList.add('hidden');
+    }
+    updateLocationMarkers();
+    render();
+    if (radiusKm > 0 && radiusCircle) {
+        map.invalidateSize({ animate: false });
+        map.fitBounds(radiusCircle.getBounds(), { padding: [40, 40] });
+    }
+}
+
+function clearLocation() {
+    document.getElementById('loc-input').value = '';
+    document.getElementById('loc-single').classList.remove('resolved');
+    document.getElementById('radius-inline').classList.add('hidden');
+    officeLatLng = null; homeLatLng = null;
+    updateLocationMarkers();
+    render();
+}
+
+function selectInlineRadius(el) {
+    document.querySelectorAll('#radius-inline .rpill').forEach(r => r.classList.remove('on'));
+    el.classList.add('on');
+    radiusKm = parseInt(el.dataset.km) || 0;
+    updateRadius();
+    render();
+    map.invalidateSize({ animate: false });
+    if (radiusKm > 0 && radiusCircle) {
+        map.fitBounds(radiusCircle.getBounds(), { padding: [40, 40] });
+    } else if (radiusKm === 0 && markers.length) {
+        const b = markers.map(m => m.getLatLng());
+        const ref = officeLatLng || homeLatLng;
+        if (ref) b.push(L.latLng(ref));
+        if (b.length) map.fitBounds(L.latLngBounds(b), { padding: [40, 40] });
+    }
+}
+
+let _suggestTimer = null;
+function setupAutocomplete() {
+    const input = document.getElementById('loc-input');
+    const dropdown = document.getElementById('loc-suggest');
+
+    input.addEventListener('input', () => {
+        clearTimeout(_suggestTimer);
+        const q = input.value.trim();
+        if (q.length < 2) { dropdown.classList.remove('open'); return; }
+        _suggestTimer = setTimeout(async () => {
+            try {
+                const resp = await fetch('/api/places?q=' + encodeURIComponent(q));
+                const data = await resp.json();
+                if (!data.suggestions || !data.suggestions.length) { dropdown.classList.remove('open'); return; }
+                dropdown.innerHTML = data.suggestions.map(s =>
+                    '<div class="loc-sug-item" data-pid="' + esc(s.place_id) + '" data-desc="' + esc(s.description) + '">'
+                    + '<div class="sug-main">' + esc(s.main) + '</div>'
+                    + (s.secondary ? '<div class="sug-secondary">' + esc(s.secondary) + '</div>' : '')
+                    + '</div>'
+                ).join('');
+                dropdown.classList.add('open');
+                dropdown.querySelectorAll('.loc-sug-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        input.value = item.dataset.desc;
+                        dropdown.classList.remove('open');
+                        resolveLocation(item.dataset.pid);
+                    });
+                });
+            } catch (e) { dropdown.classList.remove('open'); }
+        }, 250);
+    });
+
+    document.addEventListener('click', e => {
+        if (!e.target.closest('#loc-single')) dropdown.classList.remove('open');
+    });
+
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { dropdown.classList.remove('open'); resolveLocation(); }
+    });
+
+    input.addEventListener('blur', () => {
+        setTimeout(() => { if (!input.value.trim()) clearLocation(); }, 200);
+    });
+}
+setupAutocomplete();
+
+// ─── Location Markers ───
+function updateLocationMarkers() {
+    if (officeMarker) { map.removeLayer(officeMarker); officeMarker = null; }
+    if (homeMarker) { map.removeLayer(homeMarker); homeMarker = null; }
+    if (radiusCircle) { map.removeLayer(radiusCircle); radiusCircle = null; }
+
+    if (officeLatLng) {
+        const icon = L.divIcon({
+            className: '',
+            html: '<div style="background:#6C5CE7;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:3px solid #fff;box-shadow:0 2px 10px rgba(108,92,231,.4)">\uD83C\uDFE2</div>',
+            iconSize: [30, 30], iconAnchor: [15, 15]
+        });
+        officeMarker = L.marker(officeLatLng, { icon }).addTo(map).bindPopup('Office');
+    }
+    if (homeLatLng) {
+        const icon = L.divIcon({
+            className: '',
+            html: '<div style="background:#00B894;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,184,148,.4)">\uD83C\uDFE0</div>',
+            iconSize: [30, 30], iconAnchor: [15, 15]
+        });
+        homeMarker = L.marker(homeLatLng, { icon }).addTo(map).bindPopup('Home');
+    }
+    updateRadius();
+}
+
+function updateRadius() {
+    if (radiusCircle) { map.removeLayer(radiusCircle); radiusCircle = null; }
+    const ref = officeLatLng || homeLatLng;
+    if (ref && radiusKm > 0) {
+        radiusCircle = L.circle(ref, {
+            radius: radiusKm * 1000,
+            color: 'var(--c)', fillColor: 'var(--c)', fillOpacity: 0.04, weight: 1.5, dashArray: '6 4'
+        }).addTo(map);
+    }
+}
+
+// ─── Nudge / Onboarding ───
+function updateNudge() {
+    const nudge = document.getElementById('nudge');
+    if (nudgeDismissed || officeLatLng || homeLatLng || !listings.length) {
+        nudge.classList.add('hidden');
+    } else {
+        nudge.classList.remove('hidden');
+    }
+}
+function dismissNudge() {
+    nudgeDismissed = true;
+    document.getElementById('nudge').classList.add('hidden');
+}
+function updateLegend() {
+    const legend = document.getElementById('map-legend');
+    const onboarding = document.getElementById('onboarding');
+    if (listings.length) {
+        if (legend) legend.style.display = '';
+        if (onboarding) onboarding.style.display = 'none';
+    } else {
+        if (legend) legend.style.display = 'none';
+    }
+}
+
+// Reset filters
+function resetFilters() {
+    document.querySelectorAll('#type-chips .qpill').forEach(c => c.classList.toggle('active', c.dataset.type === ''));
+    document.querySelectorAll('#furn-chips .qpill').forEach(c => c.classList.toggle('active', c.dataset.furn === ''));
+    document.getElementById('f-min').value = '';
+    document.getElementById('f-max').value = '';
+    document.getElementById('dedup-toggle').checked = false;
+    document.querySelector('#src-chips .qpill[data-src=""]').classList.add('active');
+    document.querySelectorAll('#src-chips .qpill[data-src]:not([data-src=""])').forEach(c => c.classList.remove('active'));
+    document.getElementById('qp-bhk').dataset.beds = '';
+    document.getElementById('qp-bhk').textContent = 'Any BHK';
+    document.getElementById('qp-bhk').classList.remove('active');
+    document.getElementById('qp-furn').dataset.furn = '';
+    document.getElementById('qp-furn').textContent = 'Furnishing';
+    document.getElementById('qp-furn').classList.remove('active');
+    document.getElementById('qp-budget').classList.remove('active');
+    document.getElementById('qp-budget').textContent = 'Budget';
+    radiusKm = 0;
+    document.querySelectorAll('#radius-chips .qpill').forEach(c => c.classList.toggle('active', c.dataset.km === '0'));
+    updateRadius();
+    applyFilters();
+}
+
+// Loading skeleton
+function showLoadingSkeleton() {
+    const scroll = document.getElementById('list-scroll');
+    const skel = '<div class="skel-card"><div class="skel-line w60"></div><div class="skel-line w80"></div><div class="skel-line w40"></div></div>';
+    scroll.innerHTML = skel.repeat(6);
+    document.getElementById('list-count').textContent = 'Loading...';
+}
+
+// ─── Init ───
+checkExistingListings();
+fetchListings({ type: 'supply' });
+fetchStats();
+</script>
+</body>
+</html>

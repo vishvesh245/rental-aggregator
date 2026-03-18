@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.env
+*.db
+.venv/
+.claude/
+design/
+mockups/
+sample_data/mock_*.json
+.DS_Store
+static/flow-*.html

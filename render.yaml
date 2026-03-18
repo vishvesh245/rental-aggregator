@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: rentscout
+    runtime: python
+    buildCommand: pip install -r requirements.txt && playwright install chromium --with-deps
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false
+      - key: APIFY_API_TOKEN
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.11.9"

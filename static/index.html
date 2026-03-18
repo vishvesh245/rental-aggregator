@@ -297,8 +297,12 @@
                 </div>
             </div>
             <button class="l-go" id="l-go" onclick="startLandingSearch()">🔍 Find Listings</button>
-            <div class="l-prog-bar" id="l-prog-bar"><div class="l-prog-fill" id="l-prog-fill"></div></div>
-            <div class="l-prog-label" id="l-prog-label"></div>
+            <div id="l-search-status" style="display:none;margin-top:16px;text-align:center">
+                <div class="l-prog-bar" id="l-prog-bar" style="display:block"><div class="l-prog-fill" id="l-prog-fill"></div></div>
+                <div id="l-prog-label" style="font-size:13px;color:#555;margin-top:10px;font-weight:600"></div>
+                <div id="l-prog-detail" style="font-size:11px;color:#999;margin-top:4px">This usually takes 30–60 seconds</div>
+                <div id="l-prog-sources" style="display:flex;gap:12px;justify-content:center;margin-top:12px;flex-wrap:wrap"></div>
+            </div>
         </div>
     </div>
     <div class="landing-footer">Searches NoBroker, 99acres, Housing.com & Facebook groups</div>
@@ -474,12 +478,19 @@ function startLandingSearch() {
 
     const btn = document.getElementById('l-go');
     btn.disabled = true;
-    btn.textContent = '🔍 Searching across sources...';
+    btn.textContent = '⏳ Searching...';
 
-    document.getElementById('l-prog-bar').style.display = 'block';
-    document.getElementById('l-prog-label').style.display = 'block';
+    const statusSection = document.getElementById('l-search-status');
+    statusSection.style.display = 'block';
     const fill = document.getElementById('l-prog-fill');
     const label = document.getElementById('l-prog-label');
+    const detail = document.getElementById('l-prog-detail');
+    const srcDiv = document.getElementById('l-prog-sources');
+    label.textContent = 'Starting search across all sources...';
+    label.style.color = '#555';
+    detail.textContent = 'This usually takes 30–60 seconds';
+    fill.style.width = '5%';
+    fill.style.background = 'linear-gradient(90deg,var(--c),#ff6b8a)';
 
     document.getElementById('sv1').classList.remove('active');
     document.getElementById('sv1').classList.add('done');
@@ -507,20 +518,35 @@ function startLandingSearch() {
     })
     .catch(() => {
         label.textContent = 'Failed to connect to server';
-        label.style.color = '#e74c3c';
+        label.style.color = '#ef4444';
+        detail.textContent = 'Check your internet connection and try again';
+        fill.style.width = '100%';
+        fill.style.background = '#ef4444';
         btn.disabled = false;
         btn.textContent = '🔍 Find Listings';
         landingSearching = false;
-        document.getElementById('l-prog-bar').style.display = 'none';
     });
 }
 
 function pollLandingJob(jobId, fill, label, sources) {
+    const detail = document.getElementById('l-prog-detail');
+    const srcDiv = document.getElementById('l-prog-sources');
+
+    // Show source badges
+    if (sources.length) {
+        const srcColors = { nobroker: '#FF6B35', '99acres': '#E91E63', housing: '#3b82f6', facebook: '#1877F2' };
+        srcDiv.innerHTML = sources.map(s =>
+            '<div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#999" id="lsrc-' + s + '">'
+            + '<div style="width:8px;height:8px;border-radius:50%;background:' + (srcColors[s] || '#999') + ';animation:blink 1s infinite"></div>'
+            + s + '…</div>'
+        ).join('');
+    }
+
     const statusMap = {
-        queued: { pct: '10%', text: 'Starting search...' },
-        scraping: { pct: '40%', text: 'Searching ' + sources.join(', ') + '...' },
-        extracting: { pct: '65%', text: 'Extracting listing details...' },
-        geocoding: { pct: '85%', text: 'Mapping locations...' },
+        queued: { pct: '10%', text: 'Queued — starting search...', detail: 'Connecting to sources' },
+        scraping: { pct: '40%', text: 'Searching across sources...', detail: 'Pulling listings from ' + sources.join(', ') },
+        extracting: { pct: '65%', text: 'Extracting listing details...', detail: 'Parsing prices, bedrooms, locations' },
+        geocoding: { pct: '85%', text: 'Mapping locations...', detail: 'Almost done — placing listings on the map' },
     };
 
     const poll = async () => {
@@ -532,8 +558,15 @@ function pollLandingJob(jobId, fill, label, sources) {
             const r = job.result || {};
             const total = r.total_listings || r.total_saved || r.listings_saved || 0;
             const srcInfo = r.sources || {};
+            // Update source badges to show done
+            Object.entries(srcInfo).forEach(([s, info]) => {
+                const el = document.getElementById('lsrc-' + s);
+                if (el) { el.style.color = '#10b981'; el.innerHTML = '<div style="width:8px;height:8px;border-radius:50%;background:#10b981"></div>' + s + ': ' + (info.listings || 0) + ' ✓'; }
+            });
             const srcSummary = Object.entries(srcInfo).map(([s, info]) => s + ': ' + (info.listings || 0)).join(', ');
-            label.textContent = total + ' listings found' + (srcSummary ? ' (' + srcSummary + ')' : '') + ' ✓';
+            label.textContent = '✓ ' + total + ' listings found!';
+            label.style.color = '#10b981';
+            detail.textContent = srcSummary || 'Ready to explore';
 
             document.getElementById('sv2').classList.remove('active');
             document.getElementById('sv2').classList.add('done');
@@ -547,17 +580,20 @@ function pollLandingJob(jobId, fill, label, sources) {
 
         if (job.status === 'error') {
             fill.style.width = '100%';
-            fill.style.background = '#e74c3c';
+            fill.style.background = '#ef4444';
             label.textContent = 'Error: ' + (job.error || 'Something went wrong');
-            label.style.color = '#e74c3c';
+            label.style.color = '#ef4444';
+            detail.textContent = 'Try again or check your connection';
             document.getElementById('l-go').disabled = false;
             document.getElementById('l-go').textContent = '🔍 Find Listings';
+            landingSearching = false;
             return;
         }
 
-        const s = statusMap[job.status] || { pct: '15%', text: job.status };
+        const s = statusMap[job.status] || { pct: '15%', text: job.status, detail: 'Working...' };
         fill.style.width = s.pct;
         label.textContent = s.text;
+        if (s.detail) detail.textContent = s.detail;
 
         if (job.status === 'extracting' || job.status === 'geocoding') {
             document.getElementById('sv2').classList.remove('active');

@@ -76,6 +76,9 @@
         .sb-btn{padding:8px 16px;background:var(--c);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;margin:3px;transition:all .15s;letter-spacing:.01em}
         .sb-btn:hover{background:var(--c2);transform:translateY(-1px);box-shadow:0 2px 8px rgba(255,56,92,.25)}
         .sb-btn:disabled{background:#ccc;cursor:not-allowed;transform:none;box-shadow:none}
+        .sb-refresh{width:32px;height:32px;border:1.5px solid #e0e0e0;background:#fff;border-radius:8px;font-size:16px;cursor:pointer;color:#666;display:flex;align-items:center;justify-content:center;margin:3px;transition:all .15s;flex-shrink:0}
+        .sb-refresh:hover{border-color:var(--c);color:var(--c);transform:rotate(180deg)}
+        .sb-refresh:disabled{opacity:.4;cursor:not-allowed;transform:none}
         .tb-sep{width:1px;height:24px;background:var(--bd);flex-shrink:0}
         /* Single location input with Office/Home toggle */
         .loc-single{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg);border:1.5px solid var(--bd);border-radius:10px;transition:all .2s;min-width:0;flex-shrink:1;position:relative}
@@ -322,7 +325,8 @@
         </select>
         <div class="sb-sep"></div>
         <input class="sb-field" id="sb-area" placeholder="Area (optional)...">
-        <button class="sb-btn" id="search-btn" onclick="startMultiSearch()">🔍 Search</button>
+        <button class="sb-btn" id="search-btn" onclick="applyFilters()">🔍 Search</button>
+        <button class="sb-refresh" id="refresh-btn" onclick="startMultiSearch()" title="Search for new listings from all sources">↻</button>
     </div>
     <div class="scrape-status" id="scrape-status"></div>
     <div class="tb-sep"></div>
@@ -791,10 +795,10 @@ function render() {
     const onboarding = document.getElementById('onboarding');
 
     if (!listings.length) {
-        scroll.innerHTML = '<div class="empty"><div class="empty-icon">🏠</div><div class="empty-title">No listings yet</div><div class="empty-sub">Set your city and budget, then click Search to find listings across all sources</div></div>';
+        scroll.innerHTML = '<div class="empty"><div class="empty-icon">🏠</div><div class="empty-title">No listings yet</div><div class="empty-sub">No listings in the database for this city/area.</div><button class="empty-reset" onclick="startMultiSearch()">🔍 Search New Listings</button></div>';
         if (onboarding) onboarding.style.display = '';
     } else if (!filtered.length) {
-        scroll.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No matches</div><div class="empty-sub">Your filters are too narrow — ' + listings.length + ' listing' + (listings.length !== 1 ? 's' : '') + ' hidden</div><button class="empty-reset" onclick="resetFilters()">Reset Filters</button></div>';
+        scroll.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No matches</div><div class="empty-sub">Your filters are too narrow — ' + listings.length + ' listing' + (listings.length !== 1 ? 's' : '') + ' hidden</div><button class="empty-reset" onclick="resetFilters()">Reset Filters</button><button class="empty-reset" style="margin-top:8px;background:#f8f8f8;color:#333" onclick="startMultiSearch()">🔍 Search New Listings</button></div>';
         if (onboarding) onboarding.style.display = 'none';
     } else {
         if (onboarding) onboarding.style.display = 'none';

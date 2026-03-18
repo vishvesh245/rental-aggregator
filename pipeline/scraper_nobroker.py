@@ -80,7 +80,7 @@ class NoBrokerScraper(BaseScraper):
         query_params = self._build_query(params, city_config)
 
         all_posts: list[RawPost] = []
-        max_pages = min(5, (params.max_results // 25) + 1)  # NoBroker returns ~25 per page
+        max_pages = min(10, (params.max_results // 25) + 1)  # NoBroker returns ~25 per page
 
         for page in range(1, max_pages + 1):
             query_params["pageNo"] = str(page)
@@ -108,6 +108,7 @@ class NoBrokerScraper(BaseScraper):
                 if post:
                     all_posts.append(post)
 
+            print(f"  [NoBroker] Page {page}: {len(all_posts)} total so far")
             if len(all_posts) >= params.max_results:
                 break
 
@@ -135,7 +136,7 @@ class NoBrokerScraper(BaseScraper):
         query_params = self._build_query(params, city_config)
         all_posts: list[RawPost] = []
         all_listings: list[RentalListing] = []
-        max_pages = min(5, (params.max_results // 25) + 1)
+        max_pages = min(10, (params.max_results // 25) + 1)
 
         for page in range(1, max_pages + 1):
             query_params["pageNo"] = str(page)

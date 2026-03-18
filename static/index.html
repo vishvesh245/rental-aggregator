@@ -502,7 +502,7 @@ function startLandingSearch() {
 
     document.getElementById('sb-city').value = city;
 
-    const body = { city, budget_min: budgetMin, budget_max: budgetMax, bedrooms, max_results: 50 };
+    const body = { city, budget_min: budgetMin, budget_max: budgetMax, bedrooms, max_results: 200 };
 
     fetch('/api/scrape/multi', {
         method: 'POST',
@@ -1175,7 +1175,7 @@ async function startMultiSearch() {
             body: JSON.stringify({
                 city: city,
                 areas: document.getElementById('sb-area').value.trim() ? [document.getElementById('sb-area').value.trim()] : undefined,
-                max_results: 50,
+                max_results: 200,
                 budget_min: parseInt(document.getElementById('f-min').value) || undefined,
                 budget_max: parseInt(document.getElementById('f-max').value) || undefined,
             }),

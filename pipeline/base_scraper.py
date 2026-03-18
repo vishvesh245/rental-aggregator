@@ -22,7 +22,7 @@ class SearchParams:
     bedrooms: list[int] | None = None     # e.g., [2, 3]
     furnished: str = ""                    # "furnished", "semi-furnished", "unfurnished", ""
     listing_type: str = ""                 # "full_flat", "flatmate", "pg", ""
-    max_results: int = 50
+    max_results: int = 200
 
 
 class BaseScraper(ABC):

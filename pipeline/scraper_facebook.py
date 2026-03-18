@@ -45,7 +45,7 @@ class FacebookScraper(BaseScraper):
 
         all_posts: list[RawPost] = []
         for group_url in group_urls:
-            posts = self._scrape_group(group_url, max_posts=params.max_results)
+            posts = self._scrape_group(group_url, max_posts=min(params.max_results, 200))
             all_posts.extend(posts)
 
         return all_posts

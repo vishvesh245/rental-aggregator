@@ -2,7 +2,7 @@ services:
   - type: web
     name: rentscout
     runtime: python
-    buildCommand: pip install -r requirements.txt && playwright install chromium --with-deps
+    buildCommand: pip install -r requirements.txt
     startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: ANTHROPIC_API_KEY

@@ -536,7 +536,7 @@ function pollLandingJob(jobId, fill, label, sources) {
     const detail = document.getElementById('l-prog-detail');
     const srcDiv = document.getElementById('l-prog-sources');
     const pollStart = Date.now();
-    const MAX_POLL_MS = 5 * 60 * 1000; // 5 minute timeout
+    const MAX_POLL_MS = 4 * 60 * 1000; // 4 minute timeout
 
     // Show source badges
     if (sources.length) {

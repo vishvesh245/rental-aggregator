@@ -126,7 +126,7 @@ class NinetyNineAcresScraper(BaseScraper):
                     "startUrls": [{"url": url} for url in urls[:5]],
                     "maxItems": params.max_results,
                 },
-                timeout=300,
+                timeout=120,
             )
 
             posts: list[RawPost] = []

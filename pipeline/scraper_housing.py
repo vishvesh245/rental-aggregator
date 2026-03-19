@@ -138,7 +138,7 @@ class HousingComScraper(BaseScraper):
                     "startUrls": [{"url": url} for url in urls[:3]],  # Limit to 3 URLs
                     "maxItems": params.max_results,
                 },
-                timeout=300,
+                timeout=120,
             )
 
             posts: list[RawPost] = []

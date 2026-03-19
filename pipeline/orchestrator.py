@@ -194,11 +194,14 @@ def run_full_pipeline(
     return results
 
 
+PARALLEL_SCRAPE_TIMEOUT = 150  # seconds — don't wait more than 2.5 min for any source
+
+
 def _scrape_all_parallel(
     params: SearchParams,
     sources: list[str],
 ) -> dict[str, list[RawPost]]:
-    """Run all scrapers in parallel using ThreadPoolExecutor."""
+    """Run all scrapers in parallel using ThreadPoolExecutor with timeout."""
     results: dict[str, list[RawPost]] = {}
 
     def _run_scraper(source_name: str) -> tuple[str, list[RawPost]]:
@@ -219,9 +222,21 @@ def _scrape_all_parallel(
             executor.submit(_run_scraper, source): source
             for source in sources
         }
-        for future in as_completed(futures):
-            source_name, posts = future.result()
-            results[source_name] = posts
+        for future in as_completed(futures, timeout=PARALLEL_SCRAPE_TIMEOUT):
+            try:
+                source_name, posts = future.result(timeout=10)
+                results[source_name] = posts
+            except Exception as e:
+                source_name = futures[future]
+                print(f"  [!] {source_name}: timed out or failed ({e})")
+                results[source_name] = []
+
+    # Mark any sources that didn't finish in time
+    for future, source_name in futures.items():
+        if source_name not in results:
+            print(f"  [!] {source_name}: skipped (exceeded {PARALLEL_SCRAPE_TIMEOUT}s timeout)")
+            results[source_name] = []
+            future.cancel()
 
     return results
 

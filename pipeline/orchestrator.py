@@ -69,7 +69,7 @@ ALL_SCRAPERS: dict[str, type[BaseScraper]] = {
 STRUCTURED_SOURCES = {"nobroker", "99acres", "housing"}
 
 # Sources that return free-text (need Claude extraction)
-UNSTRUCTURED_SOURCES = {"facebook"}
+UNSTRUCTURED_SOURCES = {"facebook", "telegram"}
 
 
 def run_full_pipeline(

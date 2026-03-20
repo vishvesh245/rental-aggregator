@@ -1,4 +1,8 @@
-"""NoBroker scraper — hits their internal API directly."""
+"""NoBroker scraper — hits their internal API directly.
+
+NoBroker's filter API now requires a Google Places placeId for the locality.
+We resolve this via the Google Geocoding API using the project's GOOGLE_MAPS_API_KEY.
+"""
 
 from __future__ import annotations
 
@@ -12,6 +16,27 @@ import httpx
 import config
 from models import RawPost, RentalListing
 from pipeline.base_scraper import BaseScraper, SearchParams
+
+# Cache place IDs to avoid repeat geocoding calls
+_PLACE_ID_CACHE: dict[str, str] = {}
+
+# Hardcoded place IDs for common Bangalore areas (avoids API call)
+KNOWN_PLACE_IDS: dict[str, str] = {
+    "bangalore": "ChIJbU60yXAWrjsR4E9-UejD3_g",
+    "koramangala": "ChIJLfyY2E4UrjsRVq4AjI7zgRY",
+    "hsr layout": "ChIJ0RIoNXAUrjsRc_OZJmYJnzQ",
+    "indiranagar": "ChIJgzHBmforUjsRiXnRFyxXo5c",
+    "whitefield": "ChIJj4KuNxMUrjsR6HJh8XLkQlQ",
+    "marathahalli": "ChIJlXd4gYoUrjsR6rXKgTd0zFQ",
+    "electronic city": "ChIJR-3znmMTrjsRiTb63sQWFpc",
+    "btm layout": "ChIJH3WT-FMUrjsR3wchWLtJBCk",
+    "jp nagar": "ChIJJ7-BNIMUrjsR4b3fEKkTmqQ",
+    "bellandur": "ChIJuxnTvccUrjsR8PXzJz5HPVM",
+    "sarjapur road": "ChIJKQQpzboUrjsR8V3tLX3MJeU",
+    "hebbal": "ChIJ7xqP3csWrjsR0jJeQkT_K4c",
+    "bannerghatta road": "ChIJKRxKRXsUrjsRTAb1zK1X5V8",
+    "jayanagar": "ChIJZVsPGnQUrjsREDnSxDRkHQA",
+}
 
 
 # NoBroker API base
@@ -194,17 +219,58 @@ class NoBrokerScraper(BaseScraper):
                 posts.append(post)
         return posts
 
+    def _get_place_id(self, location: str, city: str) -> str | None:
+        """Resolve a location string to a Google Places placeId."""
+        key = f"{location.lower()},{city.lower()}"
+
+        # Check hardcoded list first
+        place_id = KNOWN_PLACE_IDS.get(location.lower()) or KNOWN_PLACE_IDS.get(city.lower())
+        if place_id:
+            return place_id
+
+        # Check cache
+        if key in _PLACE_ID_CACHE:
+            return _PLACE_ID_CACHE[key]
+
+        # Fall back to Google Geocoding API
+        if not config.GOOGLE_MAPS_API_KEY:
+            return None
+
+        try:
+            resp = httpx.get(
+                "https://maps.googleapis.com/maps/api/geocode/json",
+                params={"address": f"{location}, {city}, India", "key": config.GOOGLE_MAPS_API_KEY},
+                timeout=10,
+            )
+            results = resp.json().get("results", [])
+            if results:
+                pid = results[0]["place_id"]
+                _PLACE_ID_CACHE[key] = pid
+                return pid
+        except Exception as e:
+            print(f"  [!] NoBroker: Failed to geocode '{location}': {e}")
+
+        return None
+
     def _build_query(self, params: SearchParams, city_config: dict) -> dict:
         """Build NoBroker API query parameters from SearchParams."""
+        # Resolve location to Google placeId (required by NoBroker API)
+        location = (params.areas[0] if params.areas else params.city)
+        place_id = self._get_place_id(location, params.city)
+
         query: dict[str, str] = {
             "city": city_config["city"],
             "orderBy": "nbRank,desc",
-            "radius": "2",
+            "radius": "3",
             "propertyType": "rent",
             "buildingType": BUILDING_TYPES,
             "sharedAccomodation": "0",
             "pageNo": "1",
         }
+
+        if place_id:
+            query["placeId"] = place_id
+            print(f"  [NoBroker] Using placeId={place_id} for '{location}'")
 
         # Budget range
         if params.budget_min or params.budget_max:
@@ -239,7 +305,7 @@ class NoBrokerScraper(BaseScraper):
     def _build_nobroker_url(item: dict, listing_id: str) -> str:
         """Build a NoBroker property page URL from API fields."""
         city = (item.get("city") or "bangalore").lower().replace(" ", "-")
-        locality = (item.get("localityName") or item.get("streetName") or "").lower().replace(" ", "-").replace(",", "")
+        locality = (item.get("locality") or item.get("nbLocality") or item.get("localityName") or item.get("streetName") or "").lower().replace(" ", "-").replace(",", "")
         if locality:
             return f"https://www.nobroker.in/property/rent/{city}/{locality}/{listing_id}"
         return f"https://www.nobroker.in/property/rent/{city}/{listing_id}"
@@ -256,9 +322,19 @@ class NoBrokerScraper(BaseScraper):
             desc = item.get("description", "")
             rent = item.get("rent", "")
             deposit = item.get("deposit", "")
-            area_name = item.get("localityName", item.get("streetName", ""))
+            area_name = (
+                item.get("locality")
+                or item.get("nbLocality")
+                or item.get("localityName")
+                or item.get("streetName")
+                or ""
+            )
             city = item.get("city", "")
-            bhk = item.get("type", "")
+            bhk_raw = item.get("typeDesc") or item.get("type", "")
+            # Normalize "BHK2" → "2 BHK", pass through "2 BHK" as-is
+            import re as _re
+            bhk_num = _re.search(r'\d+', bhk_raw)
+            bhk = f"{bhk_num.group()} BHK" if bhk_num else bhk_raw
             furnishing = item.get("furnishing", "")
             building_type = item.get("buildingType", "")
             sqft = item.get("propertySize", "")
@@ -274,7 +350,7 @@ class NoBrokerScraper(BaseScraper):
             if title:
                 text_parts.append(title)
             if bhk:
-                text_parts.append(f"{bhk}BHK")
+                text_parts.append(bhk)
             if building_type:
                 bt_map = {"AP": "Apartment", "IH": "Independent House", "IF": "Independent Floor", "VL": "Villa"}
                 text_parts.append(bt_map.get(building_type, building_type))
@@ -287,8 +363,12 @@ class NoBrokerScraper(BaseScraper):
             if deposit:
                 text_parts.append(f"Deposit: ₹{deposit}")
             if furnishing:
-                furn_map = {"FULLY": "Fully Furnished", "SEMI": "Semi Furnished", "NOT": "Unfurnished"}
-                text_parts.append(f"\n{furn_map.get(furnishing, furnishing)}")
+                furn_map = {
+                    "FULLY": "Fully Furnished", "FULLY_FURNISHED": "Fully Furnished",
+                    "SEMI": "Semi Furnished", "SEMI_FURNISHED": "Semi Furnished",
+                    "NOT": "Unfurnished", "NOT_FURNISHED": "Unfurnished", "UNFURNISHED": "Unfurnished",
+                }
+                text_parts.append(f"\n{furn_map.get(furnishing.upper(), furnishing)}")
             if sqft:
                 text_parts.append(f"{sqft} sqft")
             if floor and total_floor:
@@ -348,9 +428,15 @@ class NoBrokerScraper(BaseScraper):
             if not listing_id:
                 return None
 
-            # Furnishing mapping
-            furn_map = {"FULLY": "furnished", "SEMI": "semi-furnished", "NOT": "unfurnished"}
-            furnishing = furn_map.get(item.get("furnishing", ""), "")
+            # Furnishing mapping (API may return FULLY/SEMI/NOT or FULLY_FURNISHED/SEMI_FURNISHED/NOT_FURNISHED)
+            furn_raw = item.get("furnishing", "") or ""
+            furn_map = {
+                "FULLY": "furnished", "FULLY_FURNISHED": "furnished",
+                "SEMI": "semi-furnished", "SEMI_FURNISHED": "semi-furnished",
+                "NOT": "unfurnished", "NOT_FURNISHED": "unfurnished",
+                "UNFURNISHED": "unfurnished",
+            }
+            furnishing = furn_map.get(furn_raw.upper(), "")
 
             # Listing type
             shared = item.get("sharedAccomodation", False)
@@ -362,13 +448,26 @@ class NoBrokerScraper(BaseScraper):
             if parking_val and parking_val not in ("NONE", "0"):
                 has_parking = True
 
+            # BHK: API returns "BHK2", "BHK1", "BHK3" etc. — extract the number
+            bhk_raw = item.get("type", "") or item.get("typeDesc", "")
+            bedrooms = _parse_bhk(bhk_raw)
+
+            # Area: API uses "locality" or "nbLocality" (not "localityName")
+            area = (
+                item.get("locality")
+                or item.get("nbLocality")
+                or item.get("localityName")
+                or item.get("streetName")
+                or ""
+            )
+
             return RentalListing(
                 raw_post_id=f"nobroker_{listing_id}",
                 price=_safe_int(item.get("rent")),
                 city=item.get("city", "").title(),
-                area=item.get("localityName", item.get("streetName", "")),
-                location_text=f"{item.get('localityName', '')}, {item.get('city', '').title()}",
-                bedrooms=_safe_int(item.get("type")),
+                area=area,
+                location_text=f"{area}, {item.get('city', '').title()}",
+                bedrooms=bedrooms,
                 bathrooms=_safe_int(item.get("bathroom")),
                 furnished=furnishing,
                 contact_phone=item.get("phone", ""),
@@ -386,6 +485,17 @@ class NoBrokerScraper(BaseScraper):
         except Exception as e:
             print(f"  [!] NoBroker: Failed to extract listing: {e}")
             return None
+
+
+def _parse_bhk(val) -> int | None:
+    """Parse BHK count from strings like 'BHK2', '2 BHK', '2', or int 2."""
+    if val is None:
+        return None
+    if isinstance(val, int):
+        return val
+    import re
+    m = re.search(r'\d+', str(val))
+    return int(m.group()) if m else None
 
 
 def _safe_int(val) -> int | None:

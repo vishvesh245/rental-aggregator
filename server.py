@@ -19,7 +19,7 @@ from pipeline.scraper_facebook import scrape_facebook_group
 from pipeline.extractor import extract_rental_details
 from pipeline.geocoder import geocode_listings
 from pipeline.storage import (
-    init_db, get_listings, get_stats, save_raw_posts, save_listings,
+    init_db, get_listings, get_listings_summary, get_stats, save_raw_posts, save_listings,
     save_preferences, get_preferences, delete_preferences,
 )
 from pipeline.orchestrator import run_full_pipeline, ALL_SCRAPERS
@@ -44,6 +44,12 @@ async def index():
     return FileResponse("static/index.html")
 
 
+@app.get("/api/listings/summary")
+async def api_listings_summary():
+    """Return a summary of cached listings for the landing page hero card."""
+    return get_listings_summary()
+
+
 @app.get("/api/listings")
 async def api_listings(
     city: str = "",
@@ -56,6 +62,7 @@ async def api_listings(
     furnished: str = "",
     source: str = "",
     dedup: bool = False,
+    days: int | None = None,
 ):
     post_type = type if type != "all" else ""
     listings = get_listings(
@@ -68,6 +75,7 @@ async def api_listings(
         listing_type=listing_type,
         furnished=furnished,
         source=source,
+        days=days,
     )
     if dedup:
         listings = get_canonical_listings(listings)

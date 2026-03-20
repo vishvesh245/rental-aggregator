@@ -64,6 +64,7 @@ def init_db() -> None:
         CREATE INDEX IF NOT EXISTS idx_listings_area ON rental_listings(area);
         CREATE INDEX IF NOT EXISTS idx_listings_type ON rental_listings(post_type);
         CREATE INDEX IF NOT EXISTS idx_listings_source ON rental_listings(source);
+        CREATE INDEX IF NOT EXISTS idx_listings_extracted_at ON rental_listings(extracted_at);
 
         CREATE TABLE IF NOT EXISTS user_preferences (
             id TEXT PRIMARY KEY,
@@ -177,6 +178,77 @@ def save_listings(listings: list[RentalListing]) -> int:
     return saved
 
 
+def get_listings_summary() -> dict:
+    """
+    Return a summary of the most recent cached listings for the landing page hero card.
+    Includes: count, last scraped time, city/bedrooms/price breakdown.
+    """
+    conn = _get_conn()
+    rent_cap = "AND (price IS NULL OR price <= 150000)"
+
+    count = conn.execute(
+        f"SELECT COUNT(*) FROM rental_listings WHERE post_type = 'supply' {rent_cap}"
+    ).fetchone()[0]
+
+    if count == 0:
+        conn.close()
+        return {"count": 0}
+
+    # Most recent extraction time across all supply listings
+    last_row = conn.execute(
+        f"SELECT extracted_at FROM rental_listings WHERE post_type = 'supply' {rent_cap} ORDER BY extracted_at DESC LIMIT 1"
+    ).fetchone()
+    last_scraped_at = last_row[0] if last_row else None
+
+    # Top city
+    city_row = conn.execute(
+        f"""SELECT city, COUNT(*) as n FROM rental_listings
+            WHERE post_type='supply' AND city != '' {rent_cap}
+            GROUP BY LOWER(city) ORDER BY n DESC LIMIT 1"""
+    ).fetchone()
+    top_city = city_row["city"] if city_row else ""
+
+    # Top bedrooms
+    bhk_row = conn.execute(
+        f"""SELECT bedrooms, COUNT(*) as n FROM rental_listings
+            WHERE post_type='supply' AND bedrooms IS NOT NULL {rent_cap}
+            GROUP BY bedrooms ORDER BY n DESC LIMIT 1"""
+    ).fetchone()
+    top_bhk = bhk_row["bedrooms"] if bhk_row else None
+
+    # Price range (p10 to p90 to avoid outliers)
+    price_rows = conn.execute(
+        f"SELECT price FROM rental_listings WHERE post_type='supply' AND price IS NOT NULL {rent_cap} ORDER BY price"
+    ).fetchall()
+    prices = [r[0] for r in price_rows]
+    price_min = None
+    price_max = None
+    if prices:
+        p10 = prices[max(0, len(prices) // 10)]
+        p90 = prices[min(len(prices) - 1, (len(prices) * 9) // 10)]
+        price_min = p10
+        price_max = p90
+
+    # Source breakdown
+    source_rows = conn.execute(
+        f"""SELECT source, COUNT(*) as n FROM rental_listings
+            WHERE post_type='supply' {rent_cap}
+            GROUP BY source ORDER BY n DESC"""
+    ).fetchall()
+    by_source = {r["source"]: r["n"] for r in source_rows}
+
+    conn.close()
+    return {
+        "count": count,
+        "last_scraped_at": last_scraped_at,
+        "top_city": top_city,
+        "top_bhk": top_bhk,
+        "price_min": price_min,
+        "price_max": price_max,
+        "by_source": by_source,
+    }
+
+
 def get_listings(
     city: str = "",
     area: str = "",
@@ -187,6 +259,7 @@ def get_listings(
     listing_type: str = "",
     furnished: str = "",
     source: str = "",
+    days: int | None = None,
 ) -> list[dict]:
     """Query listings with optional filters."""
     conn = _get_conn()
@@ -232,6 +305,9 @@ def get_listings(
             placeholders = ",".join("?" for _ in sources)
             query += f" AND l.source IN ({placeholders})"
             params.extend(sources)
+
+    if days is not None:
+        query += f" AND l.extracted_at >= datetime('now', '-{int(days)} days')"
 
     # Exclude likely sale listings: cap at ₹1.5L unless user set a higher max_price
     if price_max is None or price_max <= 150000:

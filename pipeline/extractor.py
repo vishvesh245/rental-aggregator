@@ -151,14 +151,23 @@ def _extract_single(client: anthropic.Anthropic, post: RawPost) -> RentalListing
             if not data.get("is_rental_listing") and data.get("post_type") == "other":
                 return None
 
+            # Claude sometimes returns integers as strings — coerce to be safe
+            def _to_int(v):
+                if v is None:
+                    return None
+                try:
+                    return int(v)
+                except (ValueError, TypeError):
+                    return None
+
             return RentalListing(
                 raw_post_id=post.post_id,
-                price=data.get("price"),
+                price=_to_int(data.get("price")),
                 location_text=data.get("location_text", ""),
                 city=data.get("city", ""),
                 area=data.get("area", ""),
-                bedrooms=data.get("bedrooms"),
-                bathrooms=data.get("bathrooms"),
+                bedrooms=_to_int(data.get("bedrooms")),
+                bathrooms=_to_int(data.get("bathrooms")),
                 furnished=data.get("furnished", ""),
                 available_date=data.get("available_date", ""),
                 contact_phone=data.get("contact_phone", ""),

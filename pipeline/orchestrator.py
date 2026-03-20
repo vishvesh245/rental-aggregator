@@ -32,7 +32,8 @@ def sanitize_listings(listings: list[RentalListing], max_rent: int = MAX_RENT_DE
     removed = 0
     for listing in listings:
         # Price sanity check
-        if listing.price and listing.price > max_rent:
+        price = int(listing.price) if listing.price is not None else None
+        if price and price > max_rent:
             removed += 1
             continue
         # Sale keyword check in location_text or raw text

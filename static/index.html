@@ -248,7 +248,7 @@
         <div class="land-hero">
             <div class="land-hero-logo">Rent<em>Scout</em></div>
             <h1>Stop juggling 5 tabs.<br>Search once.</h1>
-            <p>RentScout searches NoBroker, 99acres, Housing.com & Facebook groups in parallel — deduplicates, ranks by distance to your office, and shows everything on one map.</p>
+            <p>RentScout searches NoBroker, 99acres, Housing.com & Telegram groups in parallel — deduplicates, ranks by distance to your office, and shows everything on one map.</p>
             <div class="land-features">
                 <div class="land-feat"><div class="land-feat-icon" style="background:#fff3e0">🔍</div> 4 sources searched in parallel</div>
                 <div class="land-feat"><div class="land-feat-icon" style="background:#e8f5e9">📍</div> Distance from your office on every listing</div>
@@ -308,7 +308,7 @@
             </div>
         </div>
     </div>
-    <div class="landing-footer">Searches NoBroker, 99acres, Housing.com & Facebook groups</div>
+    <div class="landing-footer">Searches NoBroker, 99acres, Housing.com & Telegram groups</div>
 </div>
 
 <!-- ═══ DASHBOARD ═══ -->
@@ -379,7 +379,7 @@
                 <div class="qpill" data-src="nobroker" style="color:var(--nb)" onclick="selectSourceChip(this)">NoBroker</div>
                 <div class="qpill" data-src="99acres" style="color:var(--ac)" onclick="selectSourceChip(this)">99acres</div>
                 <div class="qpill" data-src="housing" style="color:var(--ho)" onclick="selectSourceChip(this)">Housing</div>
-                <div class="qpill" data-src="facebook" style="color:var(--fb)" onclick="selectSourceChip(this)">Facebook</div>
+                <div class="qpill" data-src="telegram" style="color:#0088cc" onclick="selectSourceChip(this)">Telegram</div>
             </div>
             <div class="mf-divider"></div>
             <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer">
@@ -434,7 +434,7 @@
         </div>
         <div class="onboarding" id="onboarding" style="display:none">
             <h2>Find your next home</h2>
-            <p>Search across NoBroker, 99acres, Housing.com & Facebook groups — all in one place.</p>
+            <p>Search across NoBroker, 99acres, Housing.com & Telegram groups — all in one place.</p>
         </div>
         <!-- Side panel for detail view -->
         <div class="side-panel" id="side-panel">
@@ -540,7 +540,7 @@ function pollLandingJob(jobId, fill, label, sources) {
 
     // Show source badges
     if (sources.length) {
-        const srcColors = { nobroker: '#FF6B35', '99acres': '#E91E63', housing: '#3b82f6', facebook: '#1877F2' };
+        const srcColors = { nobroker: '#FF6B35', '99acres': '#E91E63', housing: '#3b82f6', telegram: '#0088cc' };
         srcDiv.innerHTML = sources.map(s =>
             '<div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#999" id="lsrc-' + s + '">'
             + '<div style="width:8px;height:8px;border-radius:50%;background:' + (srcColors[s] || '#999') + ';animation:blink 1s infinite"></div>'
@@ -679,8 +679,8 @@ function haversine(lat1, lon1, lat2, lon2) {
 }
 function distClass(km) { return km < 3 ? 'dist-near' : km <= 5 ? 'dist-mid' : 'dist-far'; }
 
-const sourceColors = { nobroker: '#FF6B35', '99acres': '#E91E63', housing: '#2196F3', facebook: '#1877F2' };
-const sourceLabels = { nobroker: 'NoBroker', '99acres': '99acres', housing: 'Housing.com', facebook: 'Facebook' };
+const sourceColors = { nobroker: '#FF6B35', '99acres': '#E91E63', housing: '#2196F3', telegram: '#0088cc' };
+const sourceLabels = { nobroker: 'NoBroker', '99acres': '99acres', housing: 'Housing.com', telegram: 'Telegram' };
 
 function clearMarkers() {
     markers.forEach(m => { m.closePopup(); m.off(); });

@@ -48,7 +48,7 @@ def sanitize_listings(listings: list[RentalListing], max_rent: int = MAX_RENT_DE
         print(f"  [Sanitize] Removed {removed} likely sale/overpriced listings (cap: ₹{max_rent:,})")
     return clean
 from pipeline.base_scraper import BaseScraper, SearchParams
-from pipeline.scraper_facebook import FacebookScraper
+from pipeline.scraper_telegram import TelegramScraper
 from pipeline.scraper_nobroker import NoBrokerScraper
 from pipeline.scraper_99acres import NinetyNineAcresScraper
 from pipeline.scraper_housing import HousingComScraper
@@ -59,7 +59,7 @@ from pipeline.storage import init_db, save_raw_posts, save_listings
 
 # All available scrapers
 ALL_SCRAPERS: dict[str, type[BaseScraper]] = {
-    "facebook": FacebookScraper,
+    "telegram": TelegramScraper,
     "nobroker": NoBrokerScraper,
     "99acres": NinetyNineAcresScraper,
     "housing": HousingComScraper,

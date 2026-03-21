@@ -982,7 +982,9 @@ function openDetailPanel(l) {
     const viewBtn = document.getElementById('sp-view-btn');
     if (l.post_url) {
         viewBtn.href = l.post_url;
-        viewBtn.textContent = 'View on ' + (sourceLabels[l.source] || 'source') + ' →';
+        viewBtn.target = '_blank';
+        viewBtn.rel = 'noopener';
+        viewBtn.textContent = 'Open on ' + (sourceLabels[l.source] || 'source') + ' ↗';
         viewBtn.style.display = '';
     } else {
         viewBtn.style.display = 'none';

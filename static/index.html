@@ -58,7 +58,7 @@
         .cached-link{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f8f8fa;border-radius:10px;border:1px solid #eee;margin-bottom:14px;cursor:pointer;transition:.15s}
         .cached-link:hover{border-color:var(--c);background:#fff5f7}
         .cl-left{display:flex;align-items:center;gap:8px}
-        .cl-dot{width:8px;height:8px;border-radius:50%;background:#4caf50;flex-shrink:0}
+        .cl-dot{width:8px;height:8px;border-radius:50%;background:#888;flex-shrink:0}
         .cl-text{font-size:12px;color:var(--n);font-weight:600}
         .cl-time{font-size:10px;color:#bbb;font-weight:400}
         .cl-arrow{font-size:14px;color:var(--c);font-weight:600}
@@ -126,7 +126,7 @@
         .filter-badge.show{display:inline-flex}
         /* ── Filter drawer ── */
         .filter-drawer{display:none;padding:8px 16px 10px;background:#fafbfc;border-top:1px solid #f0f0f4;gap:10px 14px;flex-wrap:wrap;align-items:center}
-        .filter-drawer.open{display:flex}
+        .filter-drawer.open{display:flex;border-bottom:1px solid var(--bd)}
         .fd-section{display:flex;align-items:center;gap:5px;flex-shrink:0}
         .fd-label{font-size:9px;font-weight:700;color:var(--lt);text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
         .fd-sep{width:1px;height:20px;background:#e0e0e0;flex-shrink:0}
@@ -174,13 +174,15 @@
         .nudge-close:hover{color:#999}
 
         /* ═══ CARD — Ultra Clean ═══ */
-        .card{padding:16px 18px;border-bottom:1px solid #f4f5f7;cursor:pointer;transition:all .15s;position:relative}
+        .card{padding:16px 18px;border-bottom:1px solid #eaedf2;cursor:pointer;transition:all .15s;position:relative}
+        .card:focus-visible{outline:2px solid var(--c);outline-offset:-2px;border-radius:4px}
         .card:hover{background:#f9fafb}
         .card.active{background:#fff5f7;border-left:3px solid var(--c);padding-left:15px}
         .card-r1{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:3px}
         .card-price{font-size:21px;font-weight:800;color:var(--n);letter-spacing:-.5px;line-height:1}
         .card-price span{font-size:11px;font-weight:500;color:var(--lt);margin-left:1px}
         .card-src{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 2px #fff,0 0 0 3px var(--bd)}
+        .card-src-badge{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;flex-shrink:0}
         .card-area{font-size:13px;font-weight:600;color:var(--n);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
         .card-type{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.03em;margin-right:4px}
         .ct-mate{background:#ffe8ec;color:var(--c)}.ct-pg{background:#fff3e0;color:#e67e22}
@@ -225,7 +227,7 @@
         .sp-sec-t{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--lt);margin-bottom:8px}
         .sp-tags{display:flex;gap:6px;flex-wrap:wrap}
         .sp-tag{font-size:11px;font-weight:600;background:var(--bg);color:var(--m);border-radius:6px;padding:5px 10px}
-        .sp-raw{background:var(--bg);border-radius:var(--rs);padding:14px;font-size:12.5px;color:var(--m);line-height:1.65;border:1px solid var(--bd)}
+        .sp-raw{background:var(--bg);border-radius:var(--rs);padding:14px;font-size:12.5px;color:var(--m);line-height:1.65;border:1px solid var(--bd);max-height:200px;overflow-y:auto}
         .sp-acts{padding:16px 20px;border-top:1px solid var(--bd);display:flex;gap:8px;flex-shrink:0}
         .sp-btn{flex:1;padding:12px;border-radius:10px;font-size:12.5px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all .15s;text-align:center;letter-spacing:.01em}
         .sp-btn-p{background:var(--n);color:#fff}.sp-btn-p:hover{background:var(--c);transform:translateY(-1px);box-shadow:0 4px 12px rgba(255,56,92,.2)}
@@ -266,13 +268,13 @@
     <div class="land-wrap">
         <div class="land-hero">
             <div class="land-hero-logo">Rent<em>Scout</em></div>
-            <h1>Stop juggling 5 tabs.<br>Search once.</h1>
-            <p>RentScout searches NoBroker & Telegram groups in parallel — deduplicates, ranks by distance to your office, and shows everything on one map.</p>
+            <h1>Stop tab-hopping.<br>Every rental, one screen.</h1>
+            <p>Search NoBroker and Telegram at once. See every listing on one map, ranked by distance to your workplace.</p>
             <div class="land-features">
-                <div class="land-feat"><div class="land-feat-icon" style="background:#fff3e0">🔍</div> Multiple sources searched in parallel</div>
-                <div class="land-feat"><div class="land-feat-icon" style="background:#e8f5e9">📍</div> Distance from your office on every listing</div>
-                <div class="land-feat"><div class="land-feat-icon" style="background:#e3f2fd">🗺️</div> Map view with smart clustering</div>
-                <div class="land-feat"><div class="land-feat-icon" style="background:#fce4ec">📋</div> One-click message to landlord</div>
+                <div class="land-feat"><div class="land-feat-icon" style="background:#fff3e0">🔍</div> NoBroker + Telegram in one search</div>
+                <div class="land-feat"><div class="land-feat-icon" style="background:#e8f5e9">📍</div> See how far each listing is from work</div>
+                <div class="land-feat"><div class="land-feat-icon" style="background:#e3f2fd">🗺️</div> All listings on one map</div>
+                <div class="land-feat"><div class="land-feat-icon" style="background:#fce4ec">📋</div> Copy a ready-made message for the owner</div>
             </div>
         </div>
         <div class="land-form">
@@ -307,6 +309,7 @@
                         <option value="Hyderabad">Hyderabad</option>
                         <option value="Pune">Pune</option>
                         <option value="Chennai">Chennai</option>
+                        <option disabled>More cities coming soon</option>
                     </select>
                 </div>
             </div>
@@ -314,8 +317,8 @@
                 <div class="l-field">
                     <div class="l-label">Budget (₹/month)</div>
                     <div style="display:flex;gap:8px">
-                        <input class="l-input" id="l-min" type="number" placeholder="Min (e.g. 15000)">
-                        <input class="l-input" id="l-max" type="number" placeholder="Max (e.g. 40000)">
+                        <input class="l-input" id="l-min" type="number" placeholder="15,000" min="1000">
+                        <input class="l-input" id="l-max" type="number" placeholder="40,000" min="1000">
                     </div>
                 </div>
             </div>
@@ -331,11 +334,11 @@
                     </div>
                 </div>
             </div>
-            <button class="l-go" id="l-go" onclick="startLandingSearch()">🔍 Find Listings</button>
+            <button class="l-go" id="l-go" onclick="startLandingSearch()">🔍 Search Rentals</button>
             <div id="l-search-status" style="display:none;margin-top:16px;text-align:center">
                 <div class="l-prog-bar" id="l-prog-bar" style="display:block"><div class="l-prog-fill" id="l-prog-fill"></div></div>
                 <div id="l-prog-label" style="font-size:13px;color:#555;margin-top:10px;font-weight:600"></div>
-                <div id="l-prog-detail" style="font-size:11px;color:#999;margin-top:4px">This usually takes 30–60 seconds</div>
+                <div id="l-prog-detail" style="font-size:11px;color:#999;margin-top:4px">Hang tight — we're pulling from multiple sources</div>
                 <div id="l-prog-sources" style="display:flex;gap:12px;justify-content:center;margin-top:12px;flex-wrap:wrap"></div>
             </div>
         </div>
@@ -356,16 +359,16 @@
                 <option value="Chennai">Chennai</option>
             </select>
             <div class="sb-sep"></div>
-            <input class="sb-field" id="sb-area" placeholder="Area (optional)...">
-            <button class="sb-btn" id="search-btn" onclick="applyFilters()">🔍</button>
-            <button class="sb-refresh" id="refresh-btn" onclick="startMultiSearch()" title="Search for new listings from all sources">↻</button>
+            <input class="sb-field" id="sb-area" placeholder="Filter by area">
+            <button class="sb-btn" id="search-btn" onclick="applyFilters()" style="min-width:50px">Filter</button>
+            <button class="sb-refresh" id="refresh-btn" onclick="startMultiSearch()" title="Fetch new listings from all sources" style="width:auto;padding:0 8px;font-size:11px;font-weight:600">+ New</button>
         </div>
         <div class="scrape-status" id="scrape-status"></div>
         <div class="tb-sep"></div>
         <!-- Location + Radius group -->
         <div class="loc-single" id="loc-single">
             <span style="font-size:14px;flex-shrink:0">📍</span>
-            <input id="loc-input" placeholder="Your office or home…">
+            <input id="loc-input" placeholder="Office or home address">
             <span class="loc-check">✓</span>
             <div class="loc-suggest" id="loc-suggest"></div>
         </div>
@@ -384,9 +387,9 @@
         <!-- Date quick pill -->
         <div class="day-pills" id="day-pills">
             <div class="dpill active" data-days="" onclick="selectDayPill(this)">All</div>
-            <div class="dpill" data-days="1" onclick="selectDayPill(this)">1D</div>
-            <div class="dpill" data-days="7" onclick="selectDayPill(this)">7D</div>
-            <div class="dpill" data-days="30" onclick="selectDayPill(this)">30D</div>
+            <div class="dpill" data-days="1" onclick="selectDayPill(this)">Today</div>
+            <div class="dpill" data-days="7" onclick="selectDayPill(this)">7 days</div>
+            <div class="dpill" data-days="30" onclick="selectDayPill(this)">30 days</div>
         </div>
         <!-- Drawer toggle -->
         <div class="mf-btn" id="mf-btn" onclick="toggleDrawer()">Filters <span style="font-size:10px">▾</span> <span class="filter-badge" id="filter-badge"></span></div>
@@ -432,7 +435,7 @@
         <div class="fd-sep"></div>
         <div class="fd-section">
             <label style="font-size:11px;display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--m);font-weight:600">
-                <input type="checkbox" id="dedup-toggle" onchange="applyFilters()" style="accent-color:var(--c)"> Dedup
+                <input type="checkbox" id="dedup-toggle" onchange="applyFilters()" style="accent-color:var(--c)"> Hide duplicates
             </label>
         </div>
     </div>
@@ -448,9 +451,9 @@
         <div class="nudge" id="nudge">
             <div class="nudge-icon">📍</div>
             <div class="nudge-body">
-                <div class="nudge-title">Set your location</div>
-                <div class="nudge-desc">Add your office or home address to see distance on every listing and sort by nearest.</div>
-                <div class="nudge-hint">📍 ← Type your address above</div>
+                <div class="nudge-title">Where do you work?</div>
+                <div class="nudge-desc">Enter your work or home address above to see commute distance on every listing.</div>
+                <div class="nudge-hint">Type an address in the location field above</div>
             </div>
             <button class="nudge-close" onclick="dismissNudge()">✕</button>
         </div>
@@ -458,7 +461,7 @@
             <div class="list-hdr-t" id="list-count">Loading...</div>
             <select class="sort-sel" id="sort-sel" onchange="changeSort(this.value)">
                 <option value="newest">Newest</option>
-                <option value="nearest">Nearest</option>
+                <option value="nearest">Nearest to you</option>
                 <option value="price_low">Price ↑</option>
                 <option value="price_high">Price ↓</option>
             </select>
@@ -493,10 +496,10 @@
             <div class="sp-body">
                 <div class="sp-sec"><div class="sp-sec-t">Details</div><div class="sp-tags" id="sp-tags"></div></div>
                 <div class="sp-sec"><div class="sp-sec-t">Distance</div><div class="sp-tags" id="sp-dists"></div></div>
-                <div class="sp-sec"><div class="sp-sec-t">Original Post</div><div class="sp-raw" id="sp-raw"></div></div>
+                <div class="sp-sec"><div class="sp-sec-t">Listing Description</div><div class="sp-raw" id="sp-raw"></div></div>
             </div>
             <div class="sp-acts">
-                <button class="sp-btn sp-btn-s" id="sp-copy-btn" onclick="copyMessageFromPanel()">📋 Copy Message</button>
+                <button class="sp-btn sp-btn-s" id="sp-copy-btn" onclick="copyMessageFromPanel()">📋 Copy Inquiry</button>
                 <a class="sp-btn sp-btn-p" id="sp-view-btn" href="#" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">View Listing →</a>
             </div>
         </div>
@@ -521,10 +524,17 @@ function getLandingBedrooms() {
 
 function startLandingSearch() {
     if (landingSearching) return;
-    landingSearching = true;
     const city = document.getElementById('l-city').value;
     const budgetMin = document.getElementById('l-min').value ? parseInt(document.getElementById('l-min').value) : null;
     const budgetMax = document.getElementById('l-max').value ? parseInt(document.getElementById('l-max').value) : null;
+    // Validate budget
+    if (budgetMin && budgetMax && budgetMin > budgetMax) {
+        document.getElementById('l-min').style.borderColor = '#ef4444';
+        document.getElementById('l-max').style.borderColor = '#ef4444';
+        setTimeout(() => { document.getElementById('l-min').style.borderColor = ''; document.getElementById('l-max').style.borderColor = ''; }, 2000);
+        return;
+    }
+    landingSearching = true;
     const bedrooms = getLandingBedrooms();
 
     const btn = document.getElementById('l-go');
@@ -684,7 +694,20 @@ function showLanding() {
     const landing = document.getElementById('landing');
     landing.style.display = 'flex';
     landing.classList.remove('exit');
-    // Re-check for cached listings to refresh the hero card
+    // Reset form state from any previous search
+    document.getElementById('l-search-status').style.display = 'none';
+    document.getElementById('l-go').disabled = false;
+    document.getElementById('l-go').textContent = '🔍 Search Rentals';
+    document.getElementById('l-prog-fill').style.width = '0';
+    document.getElementById('sv1').classList.add('active');
+    document.getElementById('sv1').classList.remove('done');
+    document.getElementById('sv2').classList.remove('active', 'done');
+    document.getElementById('sv3').classList.remove('active');
+    const stepsEl = document.querySelector('.steps-visual');
+    if (stepsEl) stepsEl.style.display = '';
+    const h3El = document.querySelector('.land-form h3');
+    if (h3El) h3El.style.display = '';
+    // Re-check for cached listings
     checkExistingListings();
 }
 
@@ -703,7 +726,7 @@ async function checkExistingListings() {
 
         // Populate minimal link bar
         document.getElementById('cached-hero').style.display = 'flex';
-        document.getElementById('ch-count').textContent = `${data.count} listings saved`;
+        document.getElementById('ch-count').textContent = `${data.count} rentals from your last search`;
         if (data.last_scraped_at) {
             document.getElementById('ch-eyebrow').textContent = `· ${timeAgo(data.last_scraped_at)}`;
         }
@@ -891,10 +914,10 @@ function render() {
     const onboarding = document.getElementById('onboarding');
 
     if (!listings.length) {
-        scroll.innerHTML = '<div class="empty"><div class="empty-icon">🏠</div><div class="empty-title">No listings yet</div><div class="empty-sub">No listings in the database for this city/area.</div><button class="empty-reset" onclick="startMultiSearch()">🔍 Search New Listings</button></div>';
+        scroll.innerHTML = '<div class="empty"><div class="empty-icon">🏠</div><div class="empty-title">No listings found</div><div class="empty-sub">We don\'t have rentals for this area yet. Run a search to get started.</div><button class="empty-reset" onclick="startMultiSearch()">🔍 Search Rentals</button></div>';
         if (onboarding) onboarding.style.display = '';
     } else if (!filtered.length) {
-        scroll.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No matches</div><div class="empty-sub">Your filters are too narrow — ' + listings.length + ' listing' + (listings.length !== 1 ? 's' : '') + ' hidden</div><button class="empty-reset" onclick="resetFilters()">Reset Filters</button><button class="empty-reset" style="margin-top:8px;background:#f8f8f8;color:#333" onclick="startMultiSearch()">🔍 Search New Listings</button></div>';
+        scroll.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No matches</div><div class="empty-sub">Try widening your filters — there are ' + listings.length + ' listing' + (listings.length !== 1 ? 's' : '') + ' that don\'t match.</div><button class="empty-reset" onclick="resetFilters()">Reset Filters</button><button class="empty-reset" style="margin-top:10px;background:#fff;color:#333;border:1.5px solid #e5e5e5" onclick="startMultiSearch()">+ New Search</button></div>';
         if (onboarding) onboarding.style.display = 'none';
     } else {
         if (onboarding) onboarding.style.display = 'none';
@@ -908,7 +931,7 @@ function render() {
             const viewLink = l.post_url || '';
             const safeId = escJs(l.raw_post_id);
             return '<div class="card' + (activeCardId === l.raw_post_id ? ' active' : '') + '" data-id="' + esc(l.raw_post_id) + '" tabindex="0" role="button" onmouseenter="hoverCard(\'' + safeId + '\')" onmouseleave="unhoverCard(\'' + safeId + '\')" onclick="focusCard(\'' + safeId + '\')" onkeydown="if(event.key===\'Enter\')focusCard(\'' + safeId + '\')">'
-                + '<div class="card-r1"><div class="card-price">' + formatPrice(l.price) + '<span>/mo</span></div><div class="card-src" style="background:' + (sourceColors[l.source] || '#999') + '" title="' + esc(sourceLabels[l.source] || l.source || 'Unknown') + '"></div></div>'
+                + '<div class="card-r1"><div class="card-price">' + formatPrice(l.price) + '<span>/mo</span></div><span class="card-src-badge" style="color:' + (sourceColors[l.source] || '#999') + ';background:' + (sourceColors[l.source] || '#999') + '10">' + esc(sourceLabels[l.source] || l.source || '') + '</span></div>'
                 + '<div class="card-area">' + typeHtml + esc(l.area || l.location_text || 'Unknown') + '</div>'
                 + '<div class="card-sub">' + (l.bedrooms != null ? l.bedrooms + ' BHK' : '') + (l.furnished ? ' \u00b7 ' + esc(l.furnished) : '') + '</div>'
                 + distHtml
@@ -968,8 +991,8 @@ function openDetailPanel(l) {
     let distHtml = '';
     const ref = officeLatLng || homeLatLng;
     if (l._dist !== null && ref) distHtml = '<div class="sp-tag ' + distClass(l._dist) + '" style="border:none">📍 ' + l._dist.toFixed(1) + ' km away</div>';
-    if (!distHtml) distHtml = '<div class="sp-tag">Set location above to see distance</div>';
     document.getElementById('sp-dists').innerHTML = distHtml;
+    document.getElementById('sp-dists').style.display = distHtml ? '' : 'none';
 
     const rawText = l.raw_text;
     if (rawText) {
@@ -990,7 +1013,7 @@ function openDetailPanel(l) {
         viewBtn.style.display = 'none';
     }
 
-    document.getElementById('sp-copy-btn').textContent = '📋 Copy Message';
+    document.getElementById('sp-copy-btn').textContent = '📋 Copy Inquiry';
     document.getElementById('sp-copy-btn').classList.remove('copied');
 
     panel.classList.add('open');
@@ -1018,14 +1041,14 @@ async function copyMessageFromPanel() {
                 document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
             }
             btn.textContent = '✓ Copied!';
-            setTimeout(() => { btn.textContent = '📋 Copy Message'; }, 2000);
+            setTimeout(() => { btn.textContent = '📋 Copy Inquiry'; }, 2000);
         } else {
             btn.textContent = '❌ Failed';
-            setTimeout(() => { btn.textContent = '📋 Copy Message'; }, 2000);
+            setTimeout(() => { btn.textContent = '📋 Copy Inquiry'; }, 2000);
         }
     } catch (e) {
         btn.textContent = '❌ Failed';
-        setTimeout(() => { btn.textContent = '📋 Copy Message'; }, 2000);
+        setTimeout(() => { btn.textContent = '📋 Copy Inquiry'; }, 2000);
     }
 }
 

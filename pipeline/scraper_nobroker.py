@@ -6,6 +6,7 @@ We resolve this via the Google Geocoding API using the project's GOOGLE_MAPS_API
 
 from __future__ import annotations
 
+import html
 import json
 import hashlib
 from datetime import datetime
@@ -105,7 +106,7 @@ class NoBrokerScraper(BaseScraper):
         query_params = self._build_query(params, city_config)
 
         all_posts: list[RawPost] = []
-        max_pages = min(10, (params.max_results // 25) + 1)  # NoBroker returns ~25 per page
+        max_pages = min(20, (params.max_results // 25) + 1)  # NoBroker returns ~25 per page
 
         for page in range(1, max_pages + 1):
             query_params["pageNo"] = str(page)
@@ -330,7 +331,7 @@ class NoBrokerScraper(BaseScraper):
             desc = item.get("description", "")
             rent = item.get("rent", "")
             deposit = item.get("deposit", "")
-            area_name = (
+            area_name = html.unescape(
                 item.get("locality")
                 or item.get("nbLocality")
                 or item.get("localityName")
@@ -465,7 +466,7 @@ class NoBrokerScraper(BaseScraper):
             bedrooms = _parse_bhk(bhk_raw)
 
             # Area: API uses "locality" or "nbLocality" (not "localityName")
-            area = (
+            area = html.unescape(
                 item.get("locality")
                 or item.get("nbLocality")
                 or item.get("localityName")

@@ -1129,7 +1129,14 @@ async function copyMessageFromPanel() {
             setTimeout(() => { btn.textContent = '📋 Copy Inquiry'; }, 2000);
         }
     } catch (e) {
-        btn.textContent = '❌ Failed';
+        // Fallback: generate a simple template locally
+        const l = selectedPanelListing;
+        const msg = `Hi, I saw your ${l.bedrooms ? l.bedrooms + ' BHK' : ''} listing in ${l.area || l.location_text || 'your area'}${l.price ? ' for ₹' + Number(l.price).toLocaleString('en-IN') + '/month' : ''}. Is it still available? I'd like to schedule a visit. Thanks!`;
+        try { await navigator.clipboard.writeText(msg); } catch (e2) {
+            const ta = document.createElement('textarea'); ta.value = msg; ta.style.cssText = 'position:fixed;left:-9999px';
+            document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+        }
+        btn.textContent = '✓ Copied!';
         setTimeout(() => { btn.textContent = '📋 Copy Inquiry'; }, 2000);
     }
 }

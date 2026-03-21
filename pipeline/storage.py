@@ -105,6 +105,9 @@ class _TursoResult:
 
     @property
     def rowcount(self) -> int:
+        # For writes (INSERT/DELETE), libsql_client provides rows_affected
+        if hasattr(self._result, 'rows_affected') and self._result.rows_affected is not None:
+            return self._result.rows_affected
         return len(self._rows)
 
 
@@ -223,7 +226,7 @@ def save_raw_posts(posts: list[RawPost]) -> int:
                 ),
             )
             saved += 1
-        except sqlite3.Error as e:
+        except (sqlite3.Error, Exception) as e:
             print(f"  [!] Failed to save post {post.post_id}: {e}")
     conn.commit()
     conn.close()
@@ -271,7 +274,7 @@ def save_listings(listings: list[RentalListing]) -> int:
                 ),
             )
             saved += 1
-        except sqlite3.Error as e:
+        except (sqlite3.Error, Exception) as e:
             print(f"  [!] Failed to save listing {listing.raw_post_id}: {e}")
     conn.commit()
     conn.close()

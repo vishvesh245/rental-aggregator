@@ -15,7 +15,7 @@
         .marker-cluster-small,.marker-cluster-medium,.marker-cluster-large{background:none !important}
         .marker-cluster-small div,.marker-cluster-medium div,.marker-cluster-large div{background:none !important}
         *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Inter',sans-serif;background:#fafafa;color:#1a1a2e;overflow:hidden;height:100vh}
+        body{font-family:'Inter',sans-serif;background:#fafafa;color:#1a1a2e;overflow:hidden;height:100vh;display:flex;flex-direction:column}
 
         /* ─── Vars ─── */
         :root{--c:#FF385C;--c2:#e62e50;--n:#1a1a2e;--bg:#f5f6fa;--bd:#eaedf2;--bd2:#dfe2e8;--m:#6b7280;--lt:#9ca3af;
@@ -88,8 +88,9 @@
         .sv-step .sv-label{font-size:11px;color:#999;font-weight:500}
         .sv-line{width:40px;height:2px;background:#eee;margin:0 4px;margin-bottom:20px}
 
-        /* ═══ DASHBOARD — Top Bar ═══ */
-        .topbar{height:60px;background:#fff;border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 20px;gap:10px;box-shadow:var(--shadow-xs);position:relative;z-index:100}
+        /* ═══ DASHBOARD — Top Bar (Option B: Compact + Drawer) ═══ */
+        .topbar-wrap{background:#fff;border-bottom:1px solid var(--bd);box-shadow:var(--shadow-xs);position:relative;z-index:100}
+        .topbar{height:52px;display:flex;align-items:center;padding:0 16px;gap:10px}
         .logo{font-size:18px;font-weight:800;letter-spacing:-.6px;white-space:nowrap;flex-shrink:0}.logo em{font-style:normal;color:var(--c)}
         .search-bar{display:flex;align-items:center;background:var(--bg);border-radius:10px;padding:0;border:1.5px solid var(--bd);transition:all .2s;flex-shrink:0;overflow:hidden}
         .search-bar:focus-within{border-color:var(--c);box-shadow:0 0 0 3px rgba(255,56,92,.08)}
@@ -132,6 +133,16 @@
         /* More filters button */
         .mf-btn{padding:7px 14px;border:1.5px solid var(--bd);border-radius:20px;font-size:11.5px;font-weight:600;color:var(--m);background:#fff;cursor:pointer;white-space:nowrap;transition:all .15s;display:inline-flex;align-items:center;gap:4px;flex-shrink:0}
         .mf-btn:hover,.mf-btn.active{border-color:var(--c);color:var(--c)}
+        .filter-badge{background:var(--c);color:#fff;font-size:9px;font-weight:700;border-radius:50%;width:16px;height:16px;display:none;align-items:center;justify-content:center;margin-left:2px}
+        .filter-badge.show{display:inline-flex}
+        /* ── Filter drawer ── */
+        .filter-drawer{display:none;padding:8px 16px 10px;background:#fafbfc;border-top:1px solid #f0f0f4;gap:10px 14px;flex-wrap:wrap;align-items:center}
+        .filter-drawer.open{display:flex}
+        .fd-section{display:flex;align-items:center;gap:5px;flex-shrink:0}
+        .fd-label{font-size:9px;font-weight:700;color:var(--lt);text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
+        .fd-sep{width:1px;height:20px;background:#e0e0e0;flex-shrink:0}
+        .fd-input{border:1.5px solid var(--bd);border-radius:8px;padding:6px 10px;font-size:11px;font-family:inherit;outline:none;width:80px;color:var(--n);background:#fff}
+        .fd-input:focus{border-color:var(--c)}
         .flex1{flex:1}
         .topbar-stat{font-size:11px;font-weight:600;color:var(--m);white-space:nowrap;flex-shrink:0;background:var(--bg);padding:6px 12px;border-radius:20px;border:1px solid var(--bd)}
         /* Scrape status */
@@ -140,20 +151,15 @@
         .dot-scraping{background:#f39c12}.dot-extracting{background:#3498db}.dot-geocoding{background:#2ecc71}
         @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
-        /* ═══ MORE FILTERS DROPDOWN ═══ */
-        .mf-dropdown{position:absolute;top:calc(100% + 4px);left:0;background:#fff;border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,.12);border:1px solid var(--bd);padding:18px;z-index:500;display:none;min-width:360px}
-        .mf-dropdown.open{display:block}
-        .mf-close{position:absolute;top:10px;right:12px;background:none;border:none;font-size:16px;color:#bbb;cursor:pointer;padding:2px}
-        .mf-close:hover{color:var(--n)}
-        .mf-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#aaa;margin-bottom:8px}
-        .mf-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+        /* ═══ FILTER CHIPS (shared by drawer) ═══ */
+        .mf-row{display:flex;flex-wrap:wrap;gap:5px}
         .mf-row:last-child{margin-bottom:0}
         .mf-divider{height:1px;background:var(--bd);margin:12px 0}
         .mf-input{border:1.5px solid var(--bd);border-radius:var(--rs);padding:8px 10px;font-size:12px;font-family:inherit;outline:none;flex:1;min-width:0;color:var(--n);transition:border-color .2s}
         .mf-input:focus{border-color:var(--c)}
 
         /* ═══ MAIN LAYOUT — Clean Split ═══ */
-        .main{display:flex;height:calc(100vh - 60px)}
+        .main{display:flex;flex:1;overflow:hidden}
         /* List panel */
         .list-panel{width:360px;min-width:300px;flex-shrink:0;display:flex;flex-direction:column;background:#fff;border-right:1px solid var(--bd)}
         .list-hdr{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bd);flex-shrink:0}
@@ -352,76 +358,87 @@
     <div class="landing-footer">Searches NoBroker, 99acres, Housing.com & Telegram groups</div>
 </div>
 
-<!-- ═══ DASHBOARD ═══ -->
-<div class="topbar">
-    <div class="logo">Rent<em>Scout</em></div>
-    <div class="search-bar">
-        <select class="sb-select" id="sb-city">
-            <option value="Bangalore">Bangalore</option>
-            <option value="Mumbai">Mumbai</option>
-            <option value="Delhi">Delhi</option>
-            <option value="Hyderabad">Hyderabad</option>
-            <option value="Pune">Pune</option>
-            <option value="Chennai">Chennai</option>
-        </select>
-        <div class="sb-sep"></div>
-        <input class="sb-field" id="sb-area" placeholder="Area (optional)...">
-        <button class="sb-btn" id="search-btn" onclick="applyFilters()">🔍 Search</button>
-        <button class="sb-refresh" id="refresh-btn" onclick="startMultiSearch()" title="Search for new listings from all sources">↻</button>
+<!-- ═══ DASHBOARD — Option B: Compact + Drawer ═══ -->
+<div class="topbar-wrap">
+    <div class="topbar">
+        <div class="logo" onclick="showLanding()" style="cursor:pointer" title="Back to search">Rent<em>Scout</em></div>
+        <div class="search-bar">
+            <select class="sb-select" id="sb-city">
+                <option value="Bangalore">Bangalore</option>
+                <option value="Mumbai">Mumbai</option>
+                <option value="Delhi">Delhi</option>
+                <option value="Hyderabad">Hyderabad</option>
+                <option value="Pune">Pune</option>
+                <option value="Chennai">Chennai</option>
+            </select>
+            <div class="sb-sep"></div>
+            <input class="sb-field" id="sb-area" placeholder="Area (optional)...">
+            <button class="sb-btn" id="search-btn" onclick="applyFilters()">🔍</button>
+            <button class="sb-refresh" id="refresh-btn" onclick="startMultiSearch()" title="Search for new listings from all sources">↻</button>
+        </div>
+        <div class="scrape-status" id="scrape-status"></div>
+        <div class="tb-sep"></div>
+        <!-- Location + Radius group -->
+        <div class="loc-single" id="loc-single">
+            <span style="font-size:14px;flex-shrink:0">📍</span>
+            <input id="loc-input" placeholder="Your office or home…">
+            <span class="loc-check">✓</span>
+            <div class="loc-suggest" id="loc-suggest"></div>
+        </div>
+        <div class="radius-inline hidden" id="radius-inline">
+            <div class="rpill on" data-km="0" onclick="selectInlineRadius(this)">Any</div>
+            <div class="rpill" data-km="3" onclick="selectInlineRadius(this)">3 km</div>
+            <div class="rpill" data-km="5" onclick="selectInlineRadius(this)">5 km</div>
+            <div class="rpill" data-km="10" onclick="selectInlineRadius(this)">10 km</div>
+        </div>
+        <div class="tb-sep"></div>
+        <!-- BHK quick pill -->
+        <div class="qpill" id="qp-bhk" data-beds="" onclick="cycleQuickBhk()">Any BHK</div>
+        <!-- Hidden state trackers for budget/furnishing (used by JS, not visible) -->
+        <div id="qp-budget" data-budget="" style="display:none">Budget</div>
+        <div id="qp-furn" data-furn="" style="display:none">Furnishing</div>
+        <!-- Date quick pill -->
+        <div class="day-pills" id="day-pills">
+            <div class="dpill active" data-days="" onclick="selectDayPill(this)">All</div>
+            <div class="dpill" data-days="1" onclick="selectDayPill(this)">1D</div>
+            <div class="dpill" data-days="7" onclick="selectDayPill(this)">7D</div>
+            <div class="dpill" data-days="30" onclick="selectDayPill(this)">30D</div>
+        </div>
+        <!-- Drawer toggle -->
+        <div class="mf-btn" id="mf-btn" onclick="toggleDrawer()">Filters <span style="font-size:10px">▾</span> <span class="filter-badge" id="filter-badge"></span></div>
+        <div class="flex1"></div>
+        <div class="topbar-stat" id="topbar-stat"></div>
     </div>
-    <div class="scrape-status" id="scrape-status"></div>
-    <div class="tb-sep"></div>
-    <!-- Location input -->
-    <div class="loc-single" id="loc-single">
-        <span style="font-size:14px;flex-shrink:0">📍</span>
-        <input id="loc-input" placeholder="Your office or home address…">
-        <span class="loc-check">✓</span>
-        <div class="loc-suggest" id="loc-suggest"></div>
-    </div>
-    <!-- Radius pills — inline, visible when location is set -->
-    <div class="radius-inline hidden" id="radius-inline">
-        <div class="rpill on" data-km="0" onclick="selectInlineRadius(this)">Any</div>
-        <div class="rpill" data-km="3" onclick="selectInlineRadius(this)">3 km</div>
-        <div class="rpill" data-km="5" onclick="selectInlineRadius(this)">5 km</div>
-        <div class="rpill" data-km="10" onclick="selectInlineRadius(this)">10 km</div>
-    </div>
-    <div class="tb-sep"></div>
-    <!-- Quick filter pills -->
-    <div class="qpill" id="qp-bhk" data-beds="" onclick="cycleQuickBhk()">Any BHK</div>
-    <div class="qpill" id="qp-budget" onclick="toggleQuickBudget()">Budget</div>
-    <div class="qpill" id="qp-furn" data-furn="" onclick="cycleQuickFurn()">Furnishing</div>
-    <!-- Date filter pills -->
-    <div class="day-pills" id="day-pills">
-        <div class="dpill active" data-days="" onclick="selectDayPill(this)">All</div>
-        <div class="dpill" data-days="1" onclick="selectDayPill(this)">1D</div>
-        <div class="dpill" data-days="7" onclick="selectDayPill(this)">7D</div>
-        <div class="dpill" data-days="30" onclick="selectDayPill(this)">30D</div>
-    </div>
-    <!-- More filters -->
-    <div style="position:relative" id="mf-wrap">
-        <div class="mf-btn" id="mf-btn" onclick="toggleMoreFilters()">More filters ▾</div>
-        <div class="mf-dropdown" id="mf-dropdown">
-            <button class="mf-close" onclick="toggleMoreFilters()">✕</button>
-            <div class="mf-title">Type</div>
+    <!-- ── Filter drawer ── -->
+    <div class="filter-drawer" id="filter-drawer">
+        <div class="fd-section">
+            <span class="fd-label">Budget</span>
+            <input class="fd-input" id="f-min" type="number" placeholder="₹ Min">
+            <input class="fd-input" id="f-max" type="number" placeholder="₹ Max">
+        </div>
+        <div class="fd-sep"></div>
+        <div class="fd-section">
+            <span class="fd-label">Type</span>
             <div class="mf-row" id="type-chips">
                 <div class="qpill active" data-type="" onclick="selectChipGroup(this,'type-chips','type')">All</div>
                 <div class="qpill" data-type="full_flat" onclick="selectChipGroup(this,'type-chips','type')">Flat</div>
                 <div class="qpill" data-type="flatmate" onclick="selectChipGroup(this,'type-chips','type')">Flatmate</div>
                 <div class="qpill" data-type="pg" onclick="selectChipGroup(this,'type-chips','type')">PG</div>
             </div>
-            <div class="mf-title">Budget range</div>
-            <div style="display:flex;gap:8px;margin-bottom:14px">
-                <input class="mf-input" id="f-min" type="number" placeholder="₹ Min">
-                <input class="mf-input" id="f-max" type="number" placeholder="₹ Max">
-            </div>
-            <div class="mf-title">Furnished</div>
+        </div>
+        <div class="fd-sep"></div>
+        <div class="fd-section">
+            <span class="fd-label">Furnished</span>
             <div class="mf-row" id="furn-chips">
                 <div class="qpill active" data-furn="" onclick="selectChipGroup(this,'furn-chips','furn')">Any</div>
                 <div class="qpill" data-furn="furnished" onclick="selectChipGroup(this,'furn-chips','furn')">Furnished</div>
                 <div class="qpill" data-furn="semi-furnished" onclick="selectChipGroup(this,'furn-chips','furn')">Semi</div>
                 <div class="qpill" data-furn="unfurnished" onclick="selectChipGroup(this,'furn-chips','furn')">Unfurnished</div>
             </div>
-            <div class="mf-title">Sources</div>
+        </div>
+        <div class="fd-sep"></div>
+        <div class="fd-section">
+            <span class="fd-label">Source</span>
             <div class="mf-row" id="src-chips">
                 <div class="qpill active" data-src="" onclick="selectSourceChip(this)">All</div>
                 <div class="qpill" data-src="nobroker" style="color:var(--nb)" onclick="selectSourceChip(this)">NoBroker</div>
@@ -429,14 +446,14 @@
                 <div class="qpill" data-src="housing" style="color:var(--ho)" onclick="selectSourceChip(this)">Housing</div>
                 <div class="qpill" data-src="telegram" style="color:#0088cc" onclick="selectSourceChip(this)">Telegram</div>
             </div>
-            <div class="mf-divider"></div>
-            <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer">
-                <input type="checkbox" id="dedup-toggle" onchange="applyFilters()" style="accent-color:var(--c)"> Hide duplicate listings
+        </div>
+        <div class="fd-sep"></div>
+        <div class="fd-section">
+            <label style="font-size:11px;display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--m);font-weight:600">
+                <input type="checkbox" id="dedup-toggle" onchange="applyFilters()" style="accent-color:var(--c)"> Dedup
             </label>
         </div>
     </div>
-    <div class="flex1"></div>
-    <div class="topbar-stat" id="topbar-stat"></div>
 </div>
 
 <div class="main">
@@ -564,6 +581,7 @@ function startLandingSearch() {
             label.style.color = '#e74c3c';
             btn.disabled = false;
             btn.textContent = '🔍 Find Listings';
+            landingSearching = false;
             return;
         }
         pollLandingJob(data.job_id, fill, label, data.sources || []);
@@ -607,7 +625,7 @@ function pollLandingJob(jobId, fill, label, sources) {
         if (Date.now() - pollStart > MAX_POLL_MS) {
             fill.style.width = '100%';
             fill.style.background = '#ef4444';
-            label.textContent = 'Search timed out after 5 minutes';
+            label.textContent = 'Search timed out after 4 minutes';
             label.style.color = '#ef4444';
             detail.textContent = 'Sources took too long. Try again.';
             document.getElementById('l-go').disabled = false;
@@ -622,6 +640,7 @@ function pollLandingJob(jobId, fill, label, sources) {
         } catch (e) { setTimeout(poll, 3000); return; }
 
         if (job.status === 'done') {
+            landingSearching = false;
             fill.style.width = '100%';
             const r = job.result || {};
             const total = r.total_listings || r.total_saved || r.listings_saved || 0;
@@ -679,6 +698,14 @@ function transitionToDashboard() {
     setTimeout(() => { document.getElementById('landing').style.display = 'none'; }, 600);
 }
 
+function showLanding() {
+    const landing = document.getElementById('landing');
+    landing.style.display = 'flex';
+    landing.classList.remove('exit');
+    // Re-check for cached listings to refresh the hero card
+    checkExistingListings();
+}
+
 // ─── Cached listings day selection (on hero card) ───
 let cachedDaysFilter = null; // null = all time
 
@@ -702,12 +729,11 @@ async function updateCachedCtaLabel() {
 
 function viewCachedListings() {
     // Transition to dashboard with the chosen date filter pre-applied
-    if (cachedDaysFilter) {
-        // Activate the matching day pill in the dashboard
-        document.querySelectorAll('#day-pills .dpill').forEach(p => {
-            p.classList.toggle('active', p.dataset.days == cachedDaysFilter);
-        });
-    }
+    // Always sync — including "All time" (cachedDaysFilter = null → dataset.days = "")
+    const filterVal = cachedDaysFilter ? String(cachedDaysFilter) : '';
+    document.querySelectorAll('#day-pills .dpill').forEach(p => {
+        p.classList.toggle('active', p.dataset.days === filterVal);
+    });
     applyFilters();
     fetchStats();
     setTimeout(() => transitionToDashboard(), 100);
@@ -747,6 +773,8 @@ async function checkExistingListings() {
         // Hide the steps-visual and h3 when hero card is shown (card replaces them visually)
         const stepsEl = document.querySelector('.steps-visual');
         if (stepsEl) stepsEl.style.display = 'none';
+        const h3El = document.querySelector('.land-form h3');
+        if (h3El) h3El.style.display = 'none';
     } catch (e) {}
 }
 
@@ -1152,13 +1180,25 @@ function getSelectedSources() {
 function applyFilters() {
     const dedup = document.getElementById('dedup-toggle').checked;
     const days = getActiveDays();
+    // Sync budget pill active state
+    const fMin = document.getElementById('f-min').value;
+    const fMax = document.getElementById('f-max').value;
+    const budgetEl = document.getElementById('qp-budget');
+    if (fMin || fMax) {
+        budgetEl.classList.add('active');
+        budgetEl.textContent = (fMin ? '₹'+fmtK(parseInt(fMin)) : '') + (fMin && fMax ? '–' : '') + (fMax ? '₹'+fmtK(parseInt(fMax)) : 'Budget');
+    } else {
+        budgetEl.classList.remove('active');
+        budgetEl.textContent = 'Budget';
+    }
+    updateFilterBadge();
     // Preserve cluster filter — only clear when user explicitly dismisses
     fetchListings({
         city: document.getElementById('sb-city').value,
         area: document.getElementById('sb-area').value.trim(),
         max_price: document.getElementById('f-max').value,
         min_price: document.getElementById('f-min').value,
-        bedrooms: getActiveChipData('l-bhk-chips', 'bhk') || '', // reuse from quick pills or dropdown
+        bedrooms: document.getElementById('qp-bhk').dataset.beds || '',
         listing_type: getActiveChipData('type-chips', 'type'),
         furnished: getActiveChipData('furn-chips', 'furn'),
         source: getSelectedSources(),
@@ -1172,6 +1212,18 @@ function applyFilters() {
 function selectChipGroup(el, containerId, attr) {
     document.querySelectorAll('#' + containerId + ' .qpill').forEach(c => c.classList.remove('active'));
     el.classList.add('active');
+    // Sync quick pills with dropdown state
+    if (containerId === 'furn-chips') {
+        const val = el.dataset.furn || '';
+        const labels = { '': 'Furnishing', 'furnished': 'Furnished', 'semi-furnished': 'Semi', 'unfurnished': 'Unfurnished' };
+        const qp = document.getElementById('qp-furn');
+        qp.dataset.furn = val;
+        qp.textContent = labels[val] || 'Furnishing';
+        qp.classList.toggle('active', val !== '');
+    }
+    if (containerId === 'type-chips') {
+        // No quick pill for type, but keep in sync for future
+    }
     applyFilters();
 }
 
@@ -1230,9 +1282,10 @@ function toggleQuickBudget() {
         document.getElementById('f-max').value = '';
         applyFilters();
     } else {
-        // Show more filters focused on budget
-        toggleMoreFilters();
-        document.getElementById('f-min').focus();
+        // Open drawer and focus budget input
+        const drawer = document.getElementById('filter-drawer');
+        if (!drawer.classList.contains('open')) toggleDrawer();
+        setTimeout(() => document.getElementById('f-min').focus(), 100);
     }
 }
 
@@ -1278,22 +1331,33 @@ function changeSort(val) {
     render();
 }
 
-// More filters dropdown
-function toggleMoreFilters() {
-    const dd = document.getElementById('mf-dropdown');
-    dd.classList.toggle('open');
-    document.getElementById('mf-btn').classList.toggle('active', dd.classList.contains('open'));
+// Filter drawer toggle
+function toggleDrawer() {
+    const drawer = document.getElementById('filter-drawer');
+    drawer.classList.toggle('open');
+    document.getElementById('mf-btn').classList.toggle('active', drawer.classList.contains('open'));
 }
+// Alias for backward compat
+function toggleMoreFilters() { toggleDrawer(); }
 
-// Close dropdown on outside click
-document.addEventListener('click', function(e) {
-    const wrap = document.getElementById('mf-wrap');
-    const dd = document.getElementById('mf-dropdown');
-    if (dd.classList.contains('open') && !wrap.contains(e.target)) {
-        dd.classList.remove('open');
-        document.getElementById('mf-btn').classList.remove('active');
-    }
-});
+// Update filter badge count
+function updateFilterBadge() {
+    let count = 0;
+    // Budget set?
+    if (document.getElementById('f-min').value || document.getElementById('f-max').value) count++;
+    // Type not "All"?
+    const activeType = document.querySelector('#type-chips .qpill.active');
+    if (activeType && activeType.dataset.type !== '') count++;
+    // Furnished set?
+    const activeFurn = document.querySelector('#furn-chips .qpill.active');
+    if (activeFurn && activeFurn.dataset.furn !== '') count++;
+    // Source not "All"?
+    const allSrc = document.querySelector('#src-chips .qpill[data-src=""]');
+    if (allSrc && !allSrc.classList.contains('active')) count++;
+    const badge = document.getElementById('filter-badge');
+    if (count > 0) { badge.textContent = count; badge.classList.add('show'); }
+    else { badge.classList.remove('show'); }
+}
 
 // ─── Multi-source search from dashboard ───
 async function startMultiSearch() {
@@ -1558,7 +1622,7 @@ function resetFilters() {
     document.getElementById('qp-budget').classList.remove('active');
     document.getElementById('qp-budget').textContent = 'Budget';
     radiusKm = 0;
-    document.querySelectorAll('#radius-chips .qpill').forEach(c => c.classList.toggle('active', c.dataset.km === '0'));
+    document.querySelectorAll('#radius-inline .rpill').forEach(c => c.classList.toggle('on', c.dataset.km === '0'));
     updateRadius();
     applyFilters();
 }

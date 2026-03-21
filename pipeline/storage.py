@@ -1,4 +1,8 @@
-"""SQLite storage layer for rental listings."""
+"""SQLite storage layer for rental listings.
+
+Uses Turso (cloud SQLite via libsql_client) when TURSO_DB_URL is set,
+otherwise falls back to local SQLite file.
+"""
 
 from __future__ import annotations
 
@@ -9,8 +13,104 @@ from dataclasses import asdict
 import config
 from models import RawPost, RentalListing
 
+# ─── Turso / local SQLite abstraction ───
+_use_turso = bool(config.TURSO_DB_URL)
+_turso_url = ""
 
-def _get_conn() -> sqlite3.Connection:
+if _use_turso:
+    try:
+        import libsql_client as _libsql_mod
+        _turso_url = config.TURSO_DB_URL.replace("libsql://", "https://")
+        print(f"  [DB] Using Turso: {config.TURSO_DB_URL[:50]}...")
+    except ImportError:
+        print("  [DB] libsql_client not installed, falling back to local SQLite")
+        _use_turso = False
+
+
+class _TursoConn:
+    """Thin wrapper around libsql_client to match sqlite3.Connection API."""
+
+    def __init__(self):
+        # Fresh client per connection — avoids async event loop deadlocks
+        self._client = _libsql_mod.create_client_sync(
+            url=_turso_url,
+            auth_token=config.TURSO_AUTH_TOKEN,
+        )
+
+    def execute(self, sql: str, params=None) -> "_TursoResult":
+        args = list(params) if params else []
+        result = self._client.execute(sql, args)
+        return _TursoResult(result)
+
+    def executescript(self, sql: str):
+        """Execute multiple statements separated by semicolons."""
+        statements = [s.strip() for s in sql.split(";") if s.strip()]
+        for stmt in statements:
+            self._client.execute(stmt)
+
+    def commit(self):
+        pass  # Turso auto-commits each statement
+
+    def close(self):
+        self._client.close()
+
+
+class _RowProxy:
+    """Dict-like object that also supports positional indexing like sqlite3.Row."""
+
+    def __init__(self, columns, values):
+        self._columns = columns
+        self._values = values
+        self._map = dict(zip(columns, values))
+
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return self._values[key]
+        return self._map[key]
+
+    def get(self, key, default=None):
+        return self._map.get(key, default)
+
+    def keys(self):
+        return self._columns
+
+    def values(self):
+        return self._values
+
+    def items(self):
+        return self._map.items()
+
+    def __iter__(self):
+        return iter(self._columns)
+
+    def __contains__(self, key):
+        return key in self._map
+
+
+class _TursoResult:
+    """Wraps libsql_client result to provide sqlite3-compatible access."""
+
+    def __init__(self, result):
+        self._result = result
+        self._columns = result.columns if result.columns else ()
+        self._rows = result.rows if result.rows else []
+
+    def fetchall(self) -> list[_RowProxy]:
+        return [_RowProxy(self._columns, row) for row in self._rows]
+
+    def fetchone(self) -> _RowProxy | None:
+        if self._rows:
+            return _RowProxy(self._columns, self._rows[0])
+        return None
+
+    @property
+    def rowcount(self) -> int:
+        return len(self._rows)
+
+
+def _get_conn():
+    if _use_turso:
+        return _TursoConn()
     conn = sqlite3.connect(config.DB_PATH)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")

@@ -303,11 +303,19 @@ class NoBrokerScraper(BaseScraper):
 
     @staticmethod
     def _build_nobroker_url(item: dict, listing_id: str) -> str:
-        """Build a NoBroker property page URL from API fields."""
+        """Get the canonical NoBroker property page URL from API response."""
+        # Prefer the API-provided canonical URL
+        detail_url = item.get("detailUrl", "")
+        if detail_url:
+            if detail_url.startswith("/"):
+                return f"https://www.nobroker.in{detail_url}"
+            return detail_url
+        # Fallback: use shortUrl if available
+        short_url = item.get("shortUrl", "")
+        if short_url:
+            return short_url
+        # Last resort: construct manually
         city = (item.get("city") or "bangalore").lower().replace(" ", "-")
-        locality = (item.get("locality") or item.get("nbLocality") or item.get("localityName") or item.get("streetName") or "").lower().replace(" ", "-").replace(",", "")
-        if locality:
-            return f"https://www.nobroker.in/property/rent/{city}/{locality}/{listing_id}"
         return f"https://www.nobroker.in/property/rent/{city}/{listing_id}"
 
     def _item_to_raw_post(self, item: dict) -> RawPost | None:

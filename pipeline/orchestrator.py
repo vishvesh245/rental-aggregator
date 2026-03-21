@@ -51,26 +51,22 @@ def sanitize_listings(listings: list[RentalListing], max_rent: int = MAX_RENT_DE
 from pipeline.base_scraper import BaseScraper, SearchParams
 from pipeline.scraper_telegram import TelegramScraper
 from pipeline.scraper_nobroker import NoBrokerScraper
-from pipeline.scraper_99acres import NinetyNineAcresScraper
-from pipeline.scraper_housing import HousingComScraper
 from pipeline.extractor import extract_rental_details
 from pipeline.geocoder import geocode_listings
 from pipeline.storage import init_db, save_raw_posts, save_listings
 
 
-# All available scrapers
+# All available scrapers (only working sources)
 ALL_SCRAPERS: dict[str, type[BaseScraper]] = {
-    "telegram": TelegramScraper,
     "nobroker": NoBrokerScraper,
-    "99acres": NinetyNineAcresScraper,
-    "housing": HousingComScraper,
+    "telegram": TelegramScraper,
 }
 
 # Sources that return structured data (no Claude extraction needed)
-STRUCTURED_SOURCES = {"nobroker", "99acres", "housing"}
+STRUCTURED_SOURCES = {"nobroker"}
 
 # Sources that return free-text (need Claude extraction)
-UNSTRUCTURED_SOURCES = {"facebook", "telegram"}
+UNSTRUCTURED_SOURCES = {"telegram"}
 
 
 def run_full_pipeline(

@@ -186,8 +186,10 @@
         .nudge-close:hover{color:#999}
 
         /* ═══ CARD — Ultra Clean ═══ */
-        .card{padding:16px 18px;border-bottom:1px solid #eaedf2;cursor:pointer;transition:all .15s;position:relative}
+        .card{padding:12px 14px;border-bottom:1px solid #eaedf2;cursor:pointer;transition:all .15s;position:relative;display:flex;gap:12px;align-items:stretch}
         .card:focus-visible{outline:2px solid var(--c);outline-offset:-2px;border-radius:4px}
+        .card-body{flex:1;min-width:0}
+        .card-thumb{width:72px;height:72px;border-radius:8px;background-size:cover;background-position:center;background-color:#f0f0f4;flex-shrink:0;align-self:center}
         .card:hover{background:#f9fafb}
         .card.active{background:#fff5f7;border-left:3px solid var(--c);padding-left:15px}
         .card-r1{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:3px}
@@ -344,6 +346,12 @@
                         <div class="l-chip" data-bhk="3">3 BHK</div>
                         <div class="l-chip" data-bhk="4">4+</div>
                     </div>
+                </div>
+            </div>
+            <div class="l-row">
+                <div class="l-field">
+                    <div class="l-label">Email <span style="font-weight:400;color:#bbb">(get notified of new listings)</span></div>
+                    <input class="l-input" id="l-email" type="email" placeholder="you@email.com" style="width:100%">
                 </div>
             </div>
             <button class="l-go" id="l-go" onclick="startLandingSearch()">🔍 Search Rentals</button>
@@ -574,7 +582,17 @@ function startLandingSearch() {
 
     document.getElementById('sb-city').value = city;
 
-    const body = { city, budget_min: budgetMin, budget_max: budgetMax, bedrooms, max_results: 200 };
+    const body = { city, budget_min: budgetMin, budget_max: budgetMax, bedrooms, max_results: 500 };
+
+    // Capture email if provided
+    const email = document.getElementById('l-email').value.trim();
+    if (email) {
+        fetch('/api/capture-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, city, bedrooms }),
+        }).catch(() => {});  // fire and forget
+    }
 
     fetch('/api/scrape/multi', {
         method: 'POST',
@@ -798,7 +816,8 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r
 }).addTo(map);
 
 // ─── Helpers ───
-function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = decEnt(s); return d.innerHTML; }
+function decEnt(s) { if (!s || typeof s !== 'string') return s || ''; const t = document.createElement('textarea'); t.innerHTML = s; return t.value; }
 function formatPrice(p) {
     if (!p) return 'Price N/A';
     if (p >= 100000) { const l = p / 100000; return '\u20B9' + (l % 1 === 0 ? l : l.toFixed(1)) + 'L'; }
@@ -945,7 +964,14 @@ function render() {
             if (l._distHome !== null) distHtml += '<div class="card-dist ' + distClass(l._distHome) + '">🏠 ' + l._distHome.toFixed(1) + ' km</div>';
             const viewLink = l.post_url || '';
             const safeId = escJs(l.raw_post_id);
+            // Parse image URLs
+            let imgs = [];
+            try { imgs = typeof l.image_urls === 'string' ? JSON.parse(l.image_urls) : (l.image_urls || []); } catch(e) {}
+            const thumbUrl = imgs.length ? imgs[0] : '';
+            const thumbHtml = thumbUrl ? '<div class="card-thumb" style="background-image:url(\'' + esc(thumbUrl) + '\')"></div>' : '';
+
             return '<div class="card' + (activeCardId === l.raw_post_id ? ' active' : '') + '" data-id="' + esc(l.raw_post_id) + '" tabindex="0" role="button" onmouseenter="hoverCard(\'' + safeId + '\')" onmouseleave="unhoverCard(\'' + safeId + '\')" onclick="focusCard(\'' + safeId + '\')" onkeydown="if(event.key===\'Enter\')focusCard(\'' + safeId + '\')">'
+                + '<div class="card-body">'
                 + '<div class="card-r1"><div class="card-price">' + formatPrice(l.price) + '<span>/mo</span></div><span class="card-src-badge" style="color:' + (sourceColors[l.source] || '#999') + ';background:' + (sourceColors[l.source] || '#999') + '10">' + esc(sourceLabels[l.source] || l.source || '') + '</span></div>'
                 + '<div class="card-area">' + typeHtml + esc(l.area || l.location_text || 'Unknown') + '</div>'
                 + '<div class="card-sub">' + (l.bedrooms != null ? l.bedrooms + ' BHK' : '') + (l.furnished ? ' \u00b7 ' + esc(l.furnished) : '') + '</div>'
@@ -953,7 +979,7 @@ function render() {
                 + '<div class="card-acts">'
                 + '<button class="ca ca-s" onclick="event.stopPropagation();copyMessage(\'' + safeId + '\', this)">📋 Copy</button>'
                 + (viewLink ? '<a class="ca ca-p" href="' + encodeURI(viewLink) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="text-decoration:none">View →</a>' : '')
-                + '</div></div>';
+                + '</div></div>' + thumbHtml + '</div>';
         }).join('');
     }
 
@@ -1386,7 +1412,7 @@ async function startMultiSearch() {
             body: JSON.stringify({
                 city: city,
                 areas: document.getElementById('sb-area').value.trim() ? [document.getElementById('sb-area').value.trim()] : undefined,
-                max_results: 200,
+                max_results: 500,
                 budget_min: parseInt(document.getElementById('f-min').value) || undefined,
                 budget_max: parseInt(document.getElementById('f-max').value) || undefined,
             }),

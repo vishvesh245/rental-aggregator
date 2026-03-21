@@ -389,11 +389,15 @@ class NoBrokerScraper(BaseScraper):
             # Images
             photos = item.get("photos", [])
             image_urls = []
-            for photo in photos:
+            for photo in photos[:5]:  # Limit to 5 photos
                 if isinstance(photo, dict):
-                    url = photo.get("url", photo.get("imagesMap", {}).get("original", ""))
-                    if url:
-                        image_urls.append(url)
+                    imgs_map = photo.get("imagesMap", {})
+                    filename = imgs_map.get("medium") or imgs_map.get("large") or imgs_map.get("original", "")
+                    if filename and not filename.startswith("http"):
+                        # Build CDN URL: https://images.nobroker.in/images/{listingId}/{filename}
+                        filename = f"https://images.nobroker.in/images/{listing_id}/{filename}"
+                    if filename:
+                        image_urls.append(filename)
                 elif isinstance(photo, str):
                     image_urls.append(photo)
 
@@ -484,7 +488,7 @@ class NoBrokerScraper(BaseScraper):
                 latitude=_safe_float(item.get("latitude")),
                 longitude=_safe_float(item.get("longitude")),
                 post_url=self._build_nobroker_url(item, listing_id),
-                image_urls=[],  # Will be populated from photos
+                image_urls=_extract_photo_urls(item, listing_id),
                 post_type="supply",
                 listing_type=listing_type,
                 source="nobroker",
@@ -504,6 +508,20 @@ def _parse_bhk(val) -> int | None:
     import re
     m = re.search(r'\d+', str(val))
     return int(m.group()) if m else None
+
+
+def _extract_photo_urls(item: dict, listing_id: str) -> list[str]:
+    """Extract up to 5 CDN photo URLs from a NoBroker API item."""
+    urls = []
+    for photo in item.get("photos", [])[:5]:
+        if isinstance(photo, dict):
+            imgs_map = photo.get("imagesMap", {})
+            filename = imgs_map.get("medium") or imgs_map.get("large") or imgs_map.get("original", "")
+            if filename and not filename.startswith("http"):
+                filename = f"https://images.nobroker.in/images/{listing_id}/{filename}"
+            if filename:
+                urls.append(filename)
+    return urls
 
 
 def _safe_int(val) -> int | None:

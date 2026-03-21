@@ -20,7 +20,7 @@ from pipeline.extractor import extract_rental_details
 from pipeline.geocoder import geocode_listings
 from pipeline.storage import (
     init_db, get_listings, get_listings_summary, get_stats, save_raw_posts, save_listings,
-    save_preferences, get_preferences, delete_preferences,
+    save_preferences, get_preferences, delete_preferences, save_email_capture,
 )
 from pipeline.orchestrator import run_full_pipeline, ALL_SCRAPERS
 from pipeline.base_scraper import SearchParams
@@ -85,6 +85,19 @@ async def api_listings(
 @app.get("/api/stats")
 async def api_stats():
     return get_stats()
+
+
+class EmailCaptureRequest(BaseModel):
+    email: str
+    city: str = ""
+    bedrooms: list[int] | str = ""
+
+
+@app.post("/api/capture-email")
+async def api_capture_email(req: EmailCaptureRequest):
+    bedrooms_str = str(req.bedrooms) if req.bedrooms else ""
+    saved = save_email_capture(req.email, req.city, bedrooms_str)
+    return {"status": "saved" if saved else "exists"}
 
 
 @app.get("/api/places")
@@ -255,7 +268,7 @@ class MultiScrapeRequest(BaseModel):
     bedrooms: list[int] | None = None
     furnished: str = ""
     sources: list[str] | None = None  # None = all sources
-    max_results: int = 200
+    max_results: int = 500
 
 
 def _run_multi_pipeline(job_id: str, req: MultiScrapeRequest):

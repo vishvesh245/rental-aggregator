@@ -169,6 +169,13 @@ def init_db() -> None:
         CREATE INDEX IF NOT EXISTS idx_listings_source ON rental_listings(source);
         CREATE INDEX IF NOT EXISTS idx_listings_extracted_at ON rental_listings(extracted_at);
 
+        CREATE TABLE IF NOT EXISTS email_captures (
+            email TEXT PRIMARY KEY,
+            city TEXT DEFAULT '',
+            bedrooms TEXT DEFAULT '',
+            captured_at TEXT
+        );
+
         CREATE TABLE IF NOT EXISTS user_preferences (
             id TEXT PRIMARY KEY,
             city TEXT NOT NULL DEFAULT 'Bangalore',
@@ -531,3 +538,21 @@ def delete_preferences(pref_id: str) -> bool:
     conn.commit()
     conn.close()
     return cursor.rowcount > 0
+
+
+def save_email_capture(email: str, city: str = "", bedrooms: str = "") -> bool:
+    """Save an email capture. Returns True if new, False if already exists."""
+    from datetime import datetime
+    conn = _get_conn()
+    try:
+        conn.execute(
+            "INSERT OR REPLACE INTO email_captures (email, city, bedrooms, captured_at) VALUES (?, ?, ?, ?)",
+            (email, city, bedrooms, datetime.now().isoformat()),
+        )
+        conn.commit()
+        conn.close()
+        return True
+    except (sqlite3.Error, Exception) as e:
+        print(f"  [!] Failed to save email: {e}")
+        conn.close()
+        return False

@@ -54,25 +54,14 @@
         .l-prog-fill{height:100%;background:linear-gradient(90deg,var(--c),#ff6b8a);border-radius:3px;width:0;transition:width .5s}
         .l-prog-label{font-size:12px;color:#888;margin-top:8px;text-align:center;display:none}
         .landing-footer{font-size:11px;color:#bbb;margin-top:18px;text-align:center}
-        /* ── Cached results hero card (Option B) ── */
-        .cached-hero{background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:16px;padding:20px;color:#fff;margin-bottom:16px}
-        .ch-eyebrow{font-size:11px;color:var(--c);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
-        .ch-count{font-size:28px;font-weight:900;line-height:1;margin-bottom:2px}
-        .ch-sub{font-size:13px;color:#a0a0c0;margin-bottom:12px}
-        .ch-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-        .ch-pill{background:rgba(255,255,255,.12);border-radius:20px;padding:3px 10px;font-size:12px;color:#ddd}
-        .ch-dp-label{font-size:10px;color:#a0a0c0;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px}
-        .ch-dp-row{display:flex;gap:6px;margin-bottom:14px}
-        .ch-dp{flex:1;text-align:center;padding:7px 4px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid rgba(255,255,255,.15);color:#999;background:transparent;transition:.15s;font-family:inherit}
-        .ch-dp.active{background:var(--c);border-color:var(--c);color:#fff}
-        .ch-dp:not(.active):hover{border-color:rgba(255,255,255,.4);color:#ddd}
-        .ch-cta{width:100%;background:var(--c);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;transition:background .2s}
-        .ch-cta:hover{background:#e31c5f}
-        .ch-refresh{width:100%;background:transparent;color:#a0a0c0;border:1.5px solid rgba(255,255,255,.15);border-radius:10px;padding:9px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:.2s}
-        .ch-refresh:hover{border-color:rgba(255,255,255,.3);color:#ddd}
-        .ch-divider{display:flex;align-items:center;gap:8px;margin:14px 0}
-        .ch-divider::before,.ch-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.1)}
-        .ch-divider span{font-size:11px;color:#666;white-space:nowrap}
+        /* ── Cached results — minimal link bar (Option C) ── */
+        .cached-link{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f8f8fa;border-radius:10px;border:1px solid #eee;margin-bottom:14px;cursor:pointer;transition:.15s}
+        .cached-link:hover{border-color:var(--c);background:#fff5f7}
+        .cl-left{display:flex;align-items:center;gap:8px}
+        .cl-dot{width:8px;height:8px;border-radius:50%;background:#4caf50;flex-shrink:0}
+        .cl-text{font-size:12px;color:var(--n);font-weight:600}
+        .cl-time{font-size:10px;color:#bbb;font-weight:400}
+        .cl-arrow{font-size:14px;color:var(--c);font-weight:600}
         /* Date pills in dashboard topbar */
         .day-pills{display:flex;gap:4px;align-items:center;flex-shrink:0}
         .dpill{padding:5px 10px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid #e0e0e0;color:#888;background:#fff;transition:.15s;white-space:nowrap}
@@ -287,23 +276,19 @@
             </div>
         </div>
         <div class="land-form">
-            <!-- Cached results hero card — shown by checkExistingListings() if DB has data -->
-            <div class="cached-hero" id="cached-hero" style="display:none">
-                <div class="ch-eyebrow" id="ch-eyebrow">Last search</div>
-                <div class="ch-count" id="ch-count">—</div>
-                <div class="ch-sub" id="ch-sub">listings ready to explore</div>
-                <div class="ch-meta" id="ch-meta"></div>
-                <div class="ch-dp-label">Show listings from last</div>
-                <div class="ch-dp-row">
-                    <button class="ch-dp" data-days="1" onclick="selectCachedDays(this)">1 day</button>
-                    <button class="ch-dp" data-days="7" onclick="selectCachedDays(this)">7 days</button>
-                    <button class="ch-dp" data-days="30" onclick="selectCachedDays(this)">30 days</button>
-                    <button class="ch-dp active" data-days="" onclick="selectCachedDays(this)">All time</button>
+            <!-- Cached results — minimal link bar (Option C) -->
+            <div class="cached-link" id="cached-hero" style="display:none" onclick="viewCachedListings()">
+                <div class="cl-left">
+                    <div class="cl-dot"></div>
+                    <span class="cl-text" id="ch-count">0 listings saved</span>
+                    <span class="cl-time" id="ch-eyebrow">· just now</span>
                 </div>
-                <button class="ch-cta" id="ch-cta" onclick="viewCachedListings()">View Listings →</button>
-                <button class="ch-refresh" onclick="startLandingSearch()">↻ Find latest listings</button>
-                <div class="ch-divider"><span>or change search</span></div>
+                <span class="cl-arrow">→</span>
             </div>
+            <!-- Hidden elements for JS compat -->
+            <div id="ch-sub" style="display:none"></div>
+            <div id="ch-meta" style="display:none"></div>
+            <div id="ch-cta" style="display:none"></div>
             <div class="steps-visual">
                 <div class="sv-step active" id="sv1"><div class="sv-num">1</div><div class="sv-label">Configure</div></div>
                 <div class="sv-line"></div>
@@ -706,34 +691,8 @@ function showLanding() {
     checkExistingListings();
 }
 
-// ─── Cached listings day selection (on hero card) ───
-let cachedDaysFilter = null; // null = all time
-
-function selectCachedDays(el) {
-    document.querySelectorAll('.ch-dp').forEach(d => d.classList.remove('active'));
-    el.classList.add('active');
-    cachedDaysFilter = el.dataset.days ? parseInt(el.dataset.days) : null;
-    // Update CTA count label
-    updateCachedCtaLabel();
-}
-
-async function updateCachedCtaLabel() {
-    try {
-        const url = cachedDaysFilter ? `/api/listings?type=supply&days=${cachedDaysFilter}` : '/api/listings?type=supply';
-        const resp = await fetch(url);
-        const data = await resp.json();
-        const btn = document.getElementById('ch-cta');
-        btn.textContent = `View ${data.count} Listings →`;
-    } catch(e) {}
-}
-
+// ─── Cached listings — view saved ───
 function viewCachedListings() {
-    // Transition to dashboard with the chosen date filter pre-applied
-    // Always sync — including "All time" (cachedDaysFilter = null → dataset.days = "")
-    const filterVal = cachedDaysFilter ? String(cachedDaysFilter) : '';
-    document.querySelectorAll('#day-pills .dpill').forEach(p => {
-        p.classList.toggle('active', p.dataset.days === filterVal);
-    });
     applyFilters();
     fetchStats();
     setTimeout(() => transitionToDashboard(), 100);
@@ -743,38 +702,14 @@ async function checkExistingListings() {
     try {
         const resp = await fetch('/api/listings/summary');
         const data = await resp.json();
-        if (!data.count || data.count === 0) return; // No cached data — show search form only
+        if (!data.count || data.count === 0) return;
 
-        // Populate hero card
-        document.getElementById('cached-hero').style.display = 'block';
-
-        // Eyebrow: time ago
+        // Populate minimal link bar
+        document.getElementById('cached-hero').style.display = 'flex';
+        document.getElementById('ch-count').textContent = `${data.count} listings saved`;
         if (data.last_scraped_at) {
-            const ago = timeAgo(data.last_scraped_at);
-            document.getElementById('ch-eyebrow').textContent = `Last search · ${ago}`;
+            document.getElementById('ch-eyebrow').textContent = `· ${timeAgo(data.last_scraped_at)}`;
         }
-
-        // Count + subtitle
-        document.getElementById('ch-count').textContent = `${data.count} listings`;
-        document.getElementById('ch-sub').textContent = `Ready to explore${data.top_city ? ' in ' + data.top_city : ''}`;
-
-        // Meta pills
-        const meta = document.getElementById('ch-meta');
-        meta.innerHTML = '';
-        if (data.top_city) meta.innerHTML += `<span class="ch-pill">📍 ${data.top_city}</span>`;
-        if (data.top_bhk) meta.innerHTML += `<span class="ch-pill">${data.top_bhk} BHK</span>`;
-        if (data.price_min && data.price_max) {
-            meta.innerHTML += `<span class="ch-pill">₹${fmtK(data.price_min)}–${fmtK(data.price_max)}</span>`;
-        }
-
-        // CTA label
-        document.getElementById('ch-cta').textContent = `View ${data.count} Listings →`;
-
-        // Hide the steps-visual and h3 when hero card is shown (card replaces them visually)
-        const stepsEl = document.querySelector('.steps-visual');
-        if (stepsEl) stepsEl.style.display = 'none';
-        const h3El = document.querySelector('.land-form h3');
-        if (h3El) h3El.style.display = 'none';
     } catch (e) {}
 }
 

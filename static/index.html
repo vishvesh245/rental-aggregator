@@ -124,6 +124,9 @@
         .mf-btn:hover,.mf-btn.active{border-color:var(--c);color:var(--c)}
         .filter-badge{background:var(--c);color:#fff;font-size:9px;font-weight:700;border-radius:50%;width:16px;height:16px;display:none;align-items:center;justify-content:center;margin-left:2px}
         .filter-badge.show{display:inline-flex}
+        .clear-pill{display:none;padding:5px 10px;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid #fdd;color:var(--c);background:#fff5f7;white-space:nowrap;transition:.15s;flex-shrink:0;align-items:center;gap:3px}
+        .clear-pill.show{display:flex}
+        .clear-pill:hover{background:#ffe0e6;border-color:var(--c)}
         /* ── Filter drawer ── */
         .filter-drawer{display:none;padding:8px 16px 10px;background:#fafbfc;border-top:1px solid #f0f0f4;gap:10px 14px;flex-wrap:wrap;align-items:center}
         .filter-drawer.open{display:flex;border-bottom:1px solid var(--bd)}
@@ -393,6 +396,7 @@
         </div>
         <!-- Drawer toggle -->
         <div class="mf-btn" id="mf-btn" onclick="toggleDrawer()">Filters <span style="font-size:10px">▾</span> <span class="filter-badge" id="filter-badge"></span></div>
+        <div class="clear-pill" id="clear-pill" onclick="resetFilters()">Clear all ✕</div>
         <div class="flex1"></div>
         <div class="topbar-stat" id="topbar-stat"></div>
     </div>
@@ -1311,9 +1315,22 @@ function updateFilterBadge() {
     // Source not "All"?
     const allSrc = document.querySelector('#src-chips .qpill[data-src=""]');
     if (allSrc && !allSrc.classList.contains('active')) count++;
+    // Badge
     const badge = document.getElementById('filter-badge');
     if (count > 0) { badge.textContent = count; badge.classList.add('show'); }
     else { badge.classList.remove('show'); }
+    // Clear pill — show when ANY filter is non-default (drawer + topbar pills)
+    let anyActive = count > 0;
+    // Also check BHK pill
+    if (document.getElementById('qp-bhk').dataset.beds !== '') anyActive = true;
+    // Also check day pills (not "All")
+    const activeDayPill = document.querySelector('#day-pills .dpill.active');
+    if (activeDayPill && activeDayPill.dataset.days !== '') anyActive = true;
+    // Also check area input
+    if (document.getElementById('sb-area').value.trim()) anyActive = true;
+    const clearPill = document.getElementById('clear-pill');
+    if (anyActive) { clearPill.classList.add('show'); }
+    else { clearPill.classList.remove('show'); }
 }
 
 // ─── Multi-source search from dashboard ───
@@ -1578,6 +1595,11 @@ function resetFilters() {
     document.getElementById('qp-furn').classList.remove('active');
     document.getElementById('qp-budget').classList.remove('active');
     document.getElementById('qp-budget').textContent = 'Budget';
+    // Reset day pills to "All"
+    document.querySelectorAll('#day-pills .dpill').forEach(p => p.classList.toggle('active', p.dataset.days === ''));
+    // Reset area input
+    document.getElementById('sb-area').value = '';
+    // Reset radius
     radiusKm = 0;
     document.querySelectorAll('#radius-inline .rpill').forEach(c => c.classList.toggle('on', c.dataset.km === '0'));
     updateRadius();

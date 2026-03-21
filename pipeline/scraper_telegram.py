@@ -2,6 +2,9 @@
 
 No API key, no login, no Apify. Completely free.
 Uses the public channel preview pages that Telegram exposes for every public channel.
+
+Strategy: Only keep posts that contain a price. Skip "WhatsApp for details" posts
+that lack pricing data — they waste Claude extraction tokens and produce useless listings.
 """
 
 from __future__ import annotations
@@ -18,15 +21,14 @@ from models import RawPost
 from pipeline.base_scraper import BaseScraper, SearchParams
 
 
-# Active Bangalore rental channels (public, verified active as of 2026-03)
+# Channels prioritized by price-inclusion rate (higher = better)
 BANGALORE_CHANNELS = [
-    "HousingBangalore",       # ~26,500 subscribers, multiple posts/day
-    "housingourbengaluru",    # ~7,000 subscribers
-    "FlatsAndFlatmatesBangalore",  # ~4,600 members
-    "Bangalorehousing",       # active
+    "housingourbengaluru",        # ~7K subs, ~15% posts have prices
+    "HousingBangalore",           # ~26K subs, ~10% posts have prices
+    "FlatsAndFlatmatesBangalore", # ~4.6K members
+    "Bangalorehousing",           # active but mostly sales — filter hard
 ]
 
-# Other city channels (add more as needed)
 CITY_CHANNELS: dict[str, list[str]] = {
     "bangalore": BANGALORE_CHANNELS,
     "mumbai": ["MumbaiFlatRent", "mumbaihousing"],
@@ -41,18 +43,38 @@ HEADERS = {
     "Accept-Language": "en-US,en;q=0.9",
 }
 
-# Filter out non-rental posts (ads, reposts, unrelated)
+# ─── Price detection — the core filter ───
+# Only keep posts where we can find a rent amount
+_PRICE_PATTERN = re.compile(
+    r'(?:'
+    r'(?:₹|rs\.?|inr|rent\s*[:=]?\s*)\s*[\d,.]+'  # ₹15,000 / Rs.15000 / Rent: 15000
+    r'|[\d,.]+\s*(?:k|K)\b'                          # 15K / 15k
+    r'|\d{4,6}\s*(?:/\s*(?:month|mo)|per\s*month|pm\b|/-)'  # 15000/month
+    r')',
+    re.IGNORECASE,
+)
+
+# Basic rental relevance check
 _RENTAL_KEYWORDS = re.compile(
-    r'\b(bhk|rent|flat|apartment|room|flatmate|pg|studio|1rk|2bhk|1bhk|3bhk|'
-    r'furnished|semi.?furnished|unfurnished|deposit|per\s*month|\/month|'
-    r'available|immediate|koramangala|hsr|indiranagar|whitefield|'
-    r'marathahalli|electronic\s*city|bellandur|sarjapur|btm|jayanagar)\b',
+    r'\b(bhk|rent|flat|apartment|room|flatmate|pg|studio|1rk|'
+    r'furnished|semi.?furnished|deposit|per\s*month|available)\b',
+    re.IGNORECASE,
+)
+
+# Sale listing filter — skip these
+_SALE_KEYWORDS = re.compile(
+    r'\b(for\s+sale|resale|selling|buy|purchase|emi\b|crore|cr\b|'
+    r'per\s*sq\s*ft|sq\s*ft\s*rate|investment|plot|land|site)\b',
     re.IGNORECASE,
 )
 
 
 class TelegramScraper(BaseScraper):
-    """Scrape rental listings from public Telegram channels."""
+    """Scrape rental listings from public Telegram channels.
+
+    Key difference from v1: Only returns posts that contain a price.
+    This means fewer but higher-quality results that Claude can actually extract.
+    """
 
     source_name = "telegram"
 
@@ -61,69 +83,105 @@ class TelegramScraper(BaseScraper):
         channels = CITY_CHANNELS.get(city, BANGALORE_CHANNELS)
 
         all_posts: list[RawPost] = []
+        total_scanned = 0
 
         for channel in channels:
             try:
-                posts = self._scrape_channel(channel, params)
-                print(f"  [Telegram] @{channel} → {len(posts)} listings")
+                posts, scanned = self._scrape_channel(channel, params)
+                total_scanned += scanned
+                print(f"  [Telegram] @{channel} → {len(posts)} with price (scanned {scanned})")
                 all_posts.extend(posts)
                 if len(all_posts) >= params.max_results:
                     break
-                time.sleep(random.uniform(1.0, 2.0))
+                time.sleep(random.uniform(0.8, 1.5))
             except Exception as e:
                 print(f"  [!] Telegram @{channel} error: {e}")
 
-        print(f"  [Telegram] Total: {len(all_posts)} listings")
+        print(f"  [Telegram] Total: {len(all_posts)} quality posts (from {total_scanned} scanned)")
         return all_posts[:params.max_results]
 
-    def _scrape_channel(self, channel: str, params: SearchParams) -> list[RawPost]:
-        """Scrape a single public Telegram channel."""
+    def _scrape_channel(self, channel: str, params: SearchParams) -> tuple[list[RawPost], int]:
+        """Scrape a single public Telegram channel. Returns (posts_with_price, total_scanned)."""
         url = f"https://t.me/s/{channel}"
         posts: list[RawPost] = []
+        scanned = 0
 
         try:
             resp = httpx.get(url, headers=HEADERS, timeout=20, follow_redirects=True)
             if resp.status_code != 200:
                 print(f"  [!] Telegram @{channel}: HTTP {resp.status_code}")
-                return []
+                return [], 0
 
             soup = BeautifulSoup(resp.text, "html.parser")
             messages = soup.select(".tgme_widget_message")
 
             for msg in messages:
                 post = self._parse_message(msg, channel)
-                if post and self._is_rental_post(post.text, params):
-                    posts.append(post)
+                if not post:
+                    continue
+                scanned += 1
+
+                # THE KEY FILTER: only keep posts with a price
+                if not _PRICE_PATTERN.search(post.text):
+                    continue
+
+                # Must be rental-related
+                if not _RENTAL_KEYWORDS.search(post.text):
+                    continue
+
+                # Skip sale listings
+                if _SALE_KEYWORDS.search(post.text):
+                    continue
+
+                # Area filter
+                if params.areas and not self._matches_area(post.text, params.areas):
+                    continue
+
+                posts.append(post)
 
         except Exception as e:
             print(f"  [!] Telegram @{channel} fetch error: {e}")
 
-        return posts
+        return posts, scanned
+
+    def _matches_area(self, text: str, areas: list[str]) -> bool:
+        """Check if post mentions any of the requested areas."""
+        text_lower = text.lower()
+        for area in areas:
+            if area.lower() in text_lower:
+                return True
+        # Post doesn't mention a specific area at all — include it (city-wide)
+        known_areas = re.compile(
+            r'\b(koramangala|hsr|indiranagar|whitefield|marathahalli|'
+            r'electronic city|bellandur|sarjapur|btm|jayanagar|hebbal|'
+            r'yelahanka|kr puram|jp nagar|munnekollal|kasavanahalli|'
+            r'kundanhalli|bommanahalli|banashankari|rajajinagar|'
+            r'malleswaram|basavanagudi|wilson garden|richmond)\b',
+            re.IGNORECASE
+        )
+        if known_areas.search(text):
+            return False  # Has a specific area but not the one user wants
+        return True  # No area mentioned — keep it
 
     def _parse_message(self, msg, channel: str) -> RawPost | None:
         """Parse a single Telegram message into a RawPost."""
         try:
-            # Message text
             text_el = msg.select_one(".tgme_widget_message_text")
             text = text_el.get_text(separator="\n", strip=True) if text_el else ""
-            if not text or len(text) < 20:
+            if not text or len(text) < 30:
                 return None
 
-            # Message ID and URL
             msg_link = msg.select_one(".tgme_widget_message_date")
             post_url = ""
             post_id = ""
             if msg_link and msg_link.get("href"):
                 post_url = msg_link["href"]
-                # Extract message ID from URL like https://t.me/HousingBangalore/1234
                 id_match = re.search(r'/(\d+)$', post_url)
                 post_id = id_match.group(1) if id_match else str(hash(text[:80]))
 
-            # Timestamp
             time_el = msg.select_one("time")
             timestamp = time_el.get("datetime", "") if time_el else ""
 
-            # Images
             images = []
             for img in msg.select(".tgme_widget_message_photo_wrap"):
                 style = img.get("style", "")
@@ -147,39 +205,3 @@ class TelegramScraper(BaseScraper):
         except Exception as e:
             print(f"  [!] Telegram: Failed to parse message: {e}")
             return None
-
-    def _is_rental_post(self, text: str, params: SearchParams) -> bool:
-        """Filter to only rental-related posts matching search params."""
-        if not _RENTAL_KEYWORDS.search(text):
-            return False
-
-        # Area filter — if user specified areas, check if post mentions them
-        if params.areas:
-            area_match = any(
-                area.lower() in text.lower()
-                for area in params.areas
-            )
-            if not area_match:
-                # Still include if no specific area mentioned in post (city-wide posts)
-                has_any_area = re.search(
-                    r'\b(koramangala|hsr|indiranagar|whitefield|marathahalli|'
-                    r'electronic city|bellandur|sarjapur|btm|jayanagar|hebbal|'
-                    r'yelahanka|kr puram|jp nagar|sector|layout|nagar)\b',
-                    text, re.IGNORECASE
-                )
-                if has_any_area:
-                    return False  # Has a specific area but not the one we want
-
-        # BHK filter
-        if params.bedrooms:
-            bhk_found = any(
-                re.search(rf'\b{n}\s*bhk\b|\b{n}\s*bedroom', text, re.IGNORECASE)
-                for n in params.bedrooms
-            )
-            if not bhk_found:
-                # Only filter if post explicitly mentions a BHK
-                has_any_bhk = re.search(r'\d\s*bhk', text, re.IGNORECASE)
-                if has_any_bhk:
-                    return False
-
-        return True

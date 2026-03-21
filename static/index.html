@@ -94,6 +94,15 @@
         .sb-refresh:hover{border-color:var(--c);color:var(--c);transform:rotate(180deg)}
         .sb-refresh:disabled{opacity:.4;cursor:not-allowed;transform:none}
         .tb-sep{width:1px;height:24px;background:var(--bd);flex-shrink:0}
+        /* Area filter highlight (Option C) */
+        .search-bar.area-active{border-color:var(--c);background:#fff5f7}
+        .search-bar.area-active .sb-field{font-weight:600;color:var(--c)}
+        .sb-area-clear{display:none;width:22px;height:22px;border-radius:50%;background:#fdd;border:none;cursor:pointer;font-size:11px;color:var(--c);align-items:center;justify-content:center;margin-right:4px;transition:.15s;flex-shrink:0}
+        .sb-area-clear.show{display:flex}
+        .sb-area-clear:hover{background:var(--c);color:#fff}
+        .area-hint{display:none;font-size:10px;color:var(--c);font-weight:500;padding:2px 0 0 4px;white-space:nowrap}
+        .area-hint.show{display:block}
+        .area-hint b{font-weight:700}
         /* Single location input with Office/Home toggle */
         .loc-single{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg);border:1.5px solid var(--bd);border-radius:10px;transition:all .2s;min-width:0;flex-shrink:1;position:relative}
         .loc-single:focus-within{border-color:var(--c);box-shadow:0 0 0 3px rgba(255,56,92,.06)}
@@ -363,9 +372,11 @@
             </select>
             <div class="sb-sep"></div>
             <input class="sb-field" id="sb-area" placeholder="Filter by area">
+            <button class="sb-area-clear" id="sb-area-clear" onclick="clearAreaFilter()">✕</button>
             <button class="sb-btn" id="search-btn" onclick="applyFilters()" style="min-width:50px">Filter</button>
             <button class="sb-refresh" id="refresh-btn" onclick="startMultiSearch()" title="Fetch new listings from all sources" style="width:auto;padding:0 8px;font-size:11px;font-weight:600">+ New</button>
         </div>
+        <div class="area-hint" id="area-hint"></div>
         <div class="scrape-status" id="scrape-status"></div>
         <div class="tb-sep"></div>
         <!-- Location + Radius group -->
@@ -1153,6 +1164,7 @@ function applyFilters() {
         budgetEl.textContent = 'Budget';
     }
     updateFilterBadge();
+    updateAreaHighlight();
     // Preserve cluster filter — only clear when user explicitly dismisses
     fetchListings({
         city: document.getElementById('sb-city').value,
@@ -1271,11 +1283,34 @@ document.getElementById('f-max')?.addEventListener('input', () => { clearTimeout
 document.getElementById('f-min')?.addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(_budgetTimer); applyFilters(); } });
 document.getElementById('f-max')?.addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(_budgetTimer); applyFilters(); } });
 
-// Area search debounce
+// Area search debounce + highlight
 let _areaTimer = null;
 const sbArea = document.getElementById('sb-area');
 sbArea.addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(_areaTimer); applyFilters(); } });
-sbArea.addEventListener('input', () => { clearTimeout(_areaTimer); _areaTimer = setTimeout(applyFilters, 600); });
+sbArea.addEventListener('input', () => { clearTimeout(_areaTimer); _areaTimer = setTimeout(applyFilters, 600); updateAreaHighlight(); });
+
+function updateAreaHighlight() {
+    const val = document.getElementById('sb-area').value.trim();
+    const bar = document.querySelector('.search-bar');
+    const clearBtn = document.getElementById('sb-area-clear');
+    const hint = document.getElementById('area-hint');
+    if (val) {
+        bar.classList.add('area-active');
+        clearBtn.classList.add('show');
+        hint.innerHTML = 'Filtering by <b>' + val + '</b> — click ✕ to clear';
+        hint.classList.add('show');
+    } else {
+        bar.classList.remove('area-active');
+        clearBtn.classList.remove('show');
+        hint.classList.remove('show');
+    }
+}
+
+function clearAreaFilter() {
+    document.getElementById('sb-area').value = '';
+    updateAreaHighlight();
+    applyFilters();
+}
 
 // Sort
 function changeSort(val) {

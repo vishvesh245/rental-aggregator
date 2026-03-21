@@ -230,6 +230,15 @@
         /* ═══ SIDE PANEL (detail view) ═══ */
         .side-panel{position:absolute;top:12px;right:12px;bottom:12px;width:340px;background:#fff;border-radius:var(--r);box-shadow:var(--shadow-lg);border:1px solid var(--bd);z-index:50;display:flex;flex-direction:column;overflow:hidden;transform:translateX(calc(100% + 24px));transition:transform .25s ease;pointer-events:none}
         .side-panel.open{transform:translateX(0);pointer-events:auto}
+        .sp-gallery{position:relative;width:100%;height:200px;flex-shrink:0;overflow:hidden;background:#f0f0f0}
+        .sp-gallery-track{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+        .sp-gallery-track::-webkit-scrollbar{display:none}
+        .sp-gallery-track img{width:100%;height:100%;object-fit:cover;flex-shrink:0;scroll-snap-align:start}
+        .sp-gal-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.45);color:#fff;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;z-index:2;backdrop-filter:blur(4px)}
+        .sp-gal-btn:hover{background:rgba(0,0,0,.7)}
+        .sp-gal-prev{left:8px}
+        .sp-gal-next{right:8px}
+        .sp-gal-count{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;z-index:2}
         .sp-hdr{padding:20px 20px 16px;border-bottom:1px solid var(--bd);flex-shrink:0;position:relative}
         .sp-close{position:absolute;top:16px;right:16px;width:30px;height:30px;background:var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid var(--bd);font-size:13px;color:var(--m);font-family:inherit;transition:all .15s}
         .sp-close:hover{background:#fee;color:var(--c);border-color:#fecaca}
@@ -511,6 +520,12 @@
         </div>
         <!-- Side panel for detail view -->
         <div class="side-panel" id="side-panel">
+            <div class="sp-gallery" id="sp-gallery" style="display:none">
+                <div class="sp-gallery-track" id="sp-gallery-track"></div>
+                <button class="sp-gal-btn sp-gal-prev" id="sp-gal-prev" onclick="galScroll(-1)">‹</button>
+                <button class="sp-gal-btn sp-gal-next" id="sp-gal-next" onclick="galScroll(1)">›</button>
+                <div class="sp-gal-count" id="sp-gal-count"></div>
+            </div>
             <div class="sp-hdr">
                 <button class="sp-close" onclick="closeDetailPanel()">✕</button>
                 <div class="sp-price" id="sp-price"></div>
@@ -1057,7 +1072,33 @@ function openDetailPanel(l) {
     document.getElementById('sp-copy-btn').textContent = '📋 Copy Inquiry';
     document.getElementById('sp-copy-btn').classList.remove('copied');
 
+    // Photo gallery
+    const gallery = document.getElementById('sp-gallery');
+    const track = document.getElementById('sp-gallery-track');
+    let imgs = [];
+    try { imgs = typeof l.image_urls === 'string' ? JSON.parse(l.image_urls) : (l.image_urls || []); } catch(e) {}
+    if (imgs.length) {
+        track.innerHTML = imgs.map(u => '<img src="' + esc(u) + '" alt="Listing photo" loading="lazy" onerror="this.style.display=\'none\'">').join('');
+        document.getElementById('sp-gal-count').textContent = '1 / ' + imgs.length;
+        gallery.style.display = imgs.length > 0 ? '' : 'none';
+        document.getElementById('sp-gal-prev').style.display = imgs.length > 1 ? '' : 'none';
+        document.getElementById('sp-gal-next').style.display = imgs.length > 1 ? '' : 'none';
+        // Reset scroll
+        track.scrollLeft = 0;
+        track.onscroll = () => {
+            const idx = Math.round(track.scrollLeft / track.offsetWidth);
+            document.getElementById('sp-gal-count').textContent = (idx + 1) + ' / ' + imgs.length;
+        };
+    } else {
+        gallery.style.display = 'none';
+    }
+
     panel.classList.add('open');
+}
+
+function galScroll(dir) {
+    const track = document.getElementById('sp-gallery-track');
+    track.scrollBy({ left: dir * track.offsetWidth, behavior: 'smooth' });
 }
 
 function closeDetailPanel() {

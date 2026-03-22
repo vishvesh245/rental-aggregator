@@ -1439,7 +1439,7 @@ function updateBreadcrumb() {
         areaEl.style.display = 'none';
         areaSep.style.display = 'none';
     }
-    const total = allListings.length;
+    const total = listings.length;
     const shown = document.querySelectorAll('.card:not([style*="display: none"])').length || total;
     document.getElementById('bc-count').textContent = area ? shown + ' of ' + total + ' listings' : total + ' listings';
 }

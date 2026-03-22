@@ -24,44 +24,79 @@
         --shadow-xs:0 1px 2px rgba(0,0,0,.04);--shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
         --shadow-md:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -1px rgba(0,0,0,.04);--shadow-lg:0 10px 15px -3px rgba(0,0,0,.08),0 4px 6px -2px rgba(0,0,0,.04)}
 
-        /* ═══ LANDING PAGE — Hero + Form ═══ */
-        .landing{position:fixed;inset:0;background:linear-gradient(135deg,#fafafa,#f0f0f5);z-index:2000;display:flex;align-items:center;justify-content:center;transition:opacity .5s,transform .5s}
+        /* ═══ LANDING PAGE — Option B: Two-column hero ═══ */
+        .landing{position:fixed;inset:0;z-index:2000;display:grid;grid-template-columns:1.1fr 0.9fr;overflow:hidden;transition:opacity .5s,transform .5s;background:#faf9f7}
         .landing.exit{opacity:0;transform:translateY(-20px);pointer-events:none}
-        .land-wrap{display:flex;align-items:center;gap:56px;max-width:920px;width:90%;padding:40px 0}
-        .land-hero{flex:1}
-        .land-hero-logo{font-size:28px;font-weight:900;margin-bottom:8px}.land-hero-logo em{font-style:normal;color:var(--c)}
-        .land-hero h1{font-size:32px;font-weight:800;color:var(--n);line-height:1.15;margin-bottom:12px}
-        .land-hero p{font-size:15px;color:#888;line-height:1.6;margin-bottom:20px}
-        .land-features{display:flex;flex-direction:column;gap:8px}
-        .land-feat{display:flex;align-items:center;gap:8px;font-size:13px;color:#666;font-weight:500}
-        .land-feat-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-        .land-form{width:360px;flex-shrink:0;background:#fff;border-radius:16px;padding:26px;box-shadow:0 8px 32px rgba(0,0,0,.06);border:1px solid #eee}
-        .land-form h3{font-size:15px;font-weight:700;margin-bottom:16px;color:var(--n)}
-        .l-row{display:flex;gap:10px;margin-bottom:14px}
-        .l-field{flex:1;display:flex;flex-direction:column;gap:4px}
-        .l-label{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.06em}
-        .l-input{border:1.5px solid #e5e5e5;border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;width:100%;color:var(--n);transition:border-color .2s}
-        .l-input:focus{border-color:var(--c)}
-        .l-select{border:1.5px solid #e5e5e5;border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;background:#fff;cursor:pointer;width:100%;color:var(--n)}
-        .l-chips{display:flex;gap:8px;flex-wrap:wrap}
-        .l-chip{padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500;background:#f4f5f7;cursor:pointer;border:2px solid transparent;transition:.15s;user-select:none}
-        .l-chip:hover{background:#eee}
-        .l-chip.active{background:var(--c);color:#fff;border-color:var(--c)}
-        .l-go{width:100%;background:var(--c);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;transition:background .2s}
-        .l-go:hover{background:#e31c5f}
-        .l-go:disabled{background:#ccc;cursor:not-allowed}
+        .landing::before{content:'';position:absolute;inset:0;z-index:0;
+          background-image:
+            radial-gradient(ellipse 70% 50% at 15% 20%,rgba(255,56,92,.05),transparent),
+            linear-gradient(rgba(26,26,46,.015) 1px,transparent 1px),
+            linear-gradient(90deg,rgba(26,26,46,.015) 1px,transparent 1px);
+          background-size:100% 100%,48px 48px,48px 48px;pointer-events:none}
+        .land-left{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;padding:48px 40px 48px 64px}
+        .land-right{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;gap:16px;padding:48px 56px 48px 24px}
+        .land-brand{display:flex;align-items:center;gap:8px;margin-bottom:48px}
+        .land-brand-icon{width:36px;height:36px;background:var(--c);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px}
+        .land-brand-name{font-size:18px;font-weight:700;color:var(--n)}
+        .land-h1{font-size:44px;font-weight:800;line-height:1.1;letter-spacing:-1.8px;margin-bottom:16px;color:var(--n)}
+        .land-h1 span{color:var(--c)}
+        .land-sub{font-size:15.5px;line-height:1.7;color:#6b6560;margin-bottom:36px;max-width:440px}
+        .land-stats{display:flex;gap:28px}
+        .land-stat{display:flex;flex-direction:column;gap:6px}
+        .land-stat-num{font-size:22px;font-weight:800;color:var(--n);letter-spacing:-.5px}
+        .land-stat-label{font-size:11.5px;color:#9e9a93;line-height:1.4}
+        /* Right column — CTA cards */
+        .land-cta-card{background:var(--n);border-radius:18px;padding:28px 24px;cursor:pointer;text-decoration:none;display:block;transition:transform .2s,box-shadow .2s;position:relative;overflow:hidden}
+        .land-cta-card:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(26,26,46,.2)}
+        .land-cta-card::before{content:'';position:absolute;inset:-1px;border-radius:19px;padding:1px;
+          background:linear-gradient(135deg,rgba(255,56,92,.3),transparent 40%,transparent 60%,rgba(255,56,92,.15));
+          -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .3s;pointer-events:none}
+        .land-cta-card:hover::before{opacity:1}
+        .land-cta-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,56,92,.15);color:var(--c);font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:4px 10px;border-radius:6px;margin-bottom:14px}
+        .land-cta-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--c);animation:ctaPulse 2s ease-in-out infinite}
+        @keyframes ctaPulse{0%,100%{opacity:.4}50%{opacity:1}}
+        .land-cta-title{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.3px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+        .land-cta-title .arr{color:rgba(255,255,255,.4);transition:all .2s}
+        .land-cta-card:hover .arr{color:#fff;transform:translateX(3px)}
+        .land-cta-desc{font-size:12.5px;color:rgba(255,255,255,.4);line-height:1.5}
+        .land-search-card{border:1px solid #edecea;border-radius:18px;padding:24px;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.7);backdrop-filter:blur(8px)}
+        .land-search-card:hover{border-color:rgba(255,56,92,.2);background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.05)}
+        .land-sc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+        .land-sc-label{font-size:15px;font-weight:600;color:var(--n)}
+        .land-sc-icon{font-size:18px;color:#9e9a93;transition:color .2s}
+        .land-search-card:hover .land-sc-icon{color:var(--c)}
+        .land-sc-hint{font-size:12px;color:#9e9a93;line-height:1.5}
+        .land-info-row{display:flex;gap:16px;padding:4px 0}
+        .land-info-item{flex:1;display:flex;align-items:center;gap:8px}
+        .land-info-dot{width:6px;height:6px;border-radius:50%;background:#edecea;flex-shrink:0}
+        .land-info-text{font-size:11.5px;color:#9e9a93;line-height:1.3}
+        .land-info-text strong{color:#6b6560;font-weight:600}
+        /* Search modal */
+        .land-modal-overlay{position:fixed;inset:0;z-index:3000;background:rgba(26,26,46,.4);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .25s}
+        .land-modal-overlay.open{opacity:1;pointer-events:auto}
+        .land-modal{background:#fff;border-radius:20px;padding:32px 28px 28px;width:100%;max-width:400px;transform:scale(.92);transition:transform .25s cubic-bezier(.175,.885,.32,1.275);box-shadow:0 24px 80px rgba(26,26,46,.15)}
+        .land-modal-overlay.open .land-modal{transform:scale(1)}
+        .lm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+        .lm-title{font-size:18px;font-weight:700;letter-spacing:-.3px;color:var(--n)}
+        .lm-close{width:30px;height:30px;border-radius:8px;border:none;background:#f7f6f4;cursor:pointer;font-size:16px;color:#9e9a93;display:flex;align-items:center;justify-content:center;transition:all .15s}
+        .lm-close:hover{background:#edecea;color:var(--n)}
+        .lm-field{margin-bottom:18px}
+        .lm-field label{display:block;font-size:11px;font-weight:600;color:#9e9a93;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+        .lm-field select,.lm-field input{width:100%;height:44px;border:1px solid #edecea;border-radius:10px;padding:0 14px;font-size:13px;font-family:'Inter',sans-serif;color:var(--n);background:#fff;transition:border .15s;appearance:none;-webkit-appearance:none}
+        .lm-field select{background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%239e9a93' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+        .lm-field select:focus,.lm-field input:focus{outline:none;border-color:var(--c);box-shadow:0 0 0 3px rgba(255,56,92,.08)}
+        .lm-budget-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        .lm-bhk-chips{display:flex;gap:8px;flex-wrap:wrap}
+        .lm-chip{padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500;background:#f4f5f7;cursor:pointer;border:2px solid transparent;transition:.15s;user-select:none}
+        .lm-chip:hover{background:#eee}
+        .lm-chip.active{background:var(--c);color:#fff;border-color:var(--c)}
+        .lm-search-btn{width:100%;height:48px;border:none;border-radius:10px;background:var(--c);color:#fff;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s;letter-spacing:-.2px}
+        .lm-search-btn:hover{background:#e63150;transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,56,92,.25)}
+        .lm-search-btn:disabled{background:#ccc;cursor:not-allowed;transform:none;box-shadow:none}
         .l-prog-bar{height:6px;background:#f0f0f4;border-radius:3px;overflow:hidden;margin-top:16px;display:none}
         .l-prog-fill{height:100%;background:linear-gradient(90deg,var(--c),#ff6b8a);border-radius:3px;width:0;transition:width .5s}
-        .l-prog-label{font-size:12px;color:#888;margin-top:8px;text-align:center;display:none}
-        .landing-footer{font-size:11px;color:#bbb;margin-top:18px;text-align:center}
-        /* ── Cached results — minimal link bar (Option C) ── */
-        .cached-link{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f8f8fa;border-radius:10px;border:1px solid #eee;margin-bottom:14px;cursor:pointer;transition:.15s}
-        .cached-link:hover{border-color:var(--c);background:#fff5f7}
-        .cl-left{display:flex;align-items:center;gap:8px}
-        .cl-dot{width:8px;height:8px;border-radius:50%;background:#888;flex-shrink:0}
-        .cl-text{font-size:12px;color:var(--n);font-weight:600}
-        .cl-time{font-size:10px;color:#bbb;font-weight:400}
-        .cl-arrow{font-size:14px;color:var(--c);font-weight:600}
+        /* Hidden compat elements */
+        .cached-link{display:none}
         /* Date pills in dashboard topbar */
         .day-pills{display:flex;gap:4px;align-items:center;flex-shrink:0}
         .dpill{padding:5px 10px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid #e0e0e0;color:#888;background:#fff;transition:.15s;white-space:nowrap}
@@ -294,89 +329,105 @@
 <body>
 
 <!-- ═══ LANDING PAGE — Hero + Form ═══ -->
+<!-- Hidden compat elements for JS -->
+<div id="cached-hero" style="display:none"></div>
+<div id="ch-count" style="display:none"></div>
+<div id="ch-eyebrow" style="display:none"></div>
+<div id="ch-sub" style="display:none"></div>
+<div id="ch-meta" style="display:none"></div>
+<div id="ch-cta" style="display:none"></div>
+
 <div class="landing" id="landing">
-    <div class="land-wrap">
-        <div class="land-hero">
-            <div class="land-hero-logo">Rent<em>Scout</em></div>
-            <h1>Stop tab-hopping.<br>Every rental, one screen.</h1>
-            <p>Search NoBroker and Telegram at once. See every listing on one map, ranked by distance to your workplace.</p>
-            <div class="land-features">
-                <div class="land-feat"><div class="land-feat-icon" style="background:#fff3e0">🔍</div> NoBroker + Telegram in one search</div>
-                <div class="land-feat"><div class="land-feat-icon" style="background:#e8f5e9">📍</div> See how far each listing is from work</div>
-                <div class="land-feat"><div class="land-feat-icon" style="background:#e3f2fd">🗺️</div> All listings on one map</div>
-                <div class="land-feat"><div class="land-feat-icon" style="background:#fce4ec">📋</div> Copy a ready-made message for the owner</div>
+    <!-- Left column: Hero -->
+    <div class="land-left">
+        <div class="land-brand">
+            <div class="land-brand-icon">R</div>
+            <div class="land-brand-name">RentScout</div>
+        </div>
+        <h1 class="land-h1">Stop tab-hopping.<br><span>Every rental, one screen.</span></h1>
+        <p class="land-sub">We search NoBroker and Telegram daily, put everything on a map, and rank by distance from your workplace.</p>
+        <div class="land-stats">
+            <div class="land-stat">
+                <div class="land-stat-num">200+</div>
+                <div class="land-stat-label">Listings found<br>every day</div>
+            </div>
+            <div class="land-stat">
+                <div class="land-stat-num" style="font-size:17px">NoBroker<br>+ Telegram</div>
+                <div class="land-stat-label">Facebook &amp; more<br>coming soon</div>
+            </div>
+            <div class="land-stat">
+                <div class="land-stat-num">All budgets</div>
+                <div class="land-stat-label">Price ranges<br>covered</div>
             </div>
         </div>
-        <div class="land-form">
-            <!-- Cached results — minimal link bar (Option C) -->
-            <div class="cached-link" id="cached-hero" style="display:none" onclick="viewCachedListings()">
-                <div class="cl-left">
-                    <div class="cl-dot"></div>
-                    <span class="cl-text" id="ch-count">0 listings saved</span>
-                    <span class="cl-time" id="ch-eyebrow">· just now</span>
-                </div>
-                <span class="cl-arrow">→</span>
+    </div>
+
+    <!-- Right column: CTAs -->
+    <div class="land-right">
+        <a class="land-cta-card" id="land-explore-cta" href="#" onclick="viewCachedListings(); return false;">
+            <div class="land-cta-badge">Live data</div>
+            <div class="land-cta-title">Explore rentals in Bangalore <span class="arr">→</span></div>
+            <div class="land-cta-desc">Browse listings on a map. Prices, photos, commute distances — no signup.</div>
+        </a>
+        <div class="land-search-card" onclick="openSearchModal()">
+            <div class="land-sc-top">
+                <div class="land-sc-label">Search with your own filters</div>
+                <div class="land-sc-icon">↗</div>
             </div>
-            <!-- Hidden elements for JS compat -->
-            <div id="ch-sub" style="display:none"></div>
-            <div id="ch-meta" style="display:none"></div>
-            <div id="ch-cta" style="display:none"></div>
-            <div class="steps-visual">
-                <div class="sv-step active" id="sv1"><div class="sv-num">1</div><div class="sv-label">Configure</div></div>
-                <div class="sv-line"></div>
-                <div class="sv-step" id="sv2"><div class="sv-num">2</div><div class="sv-label">Searching</div></div>
-                <div class="sv-line"></div>
-                <div class="sv-step" id="sv3"><div class="sv-num">3</div><div class="sv-label">Explore</div></div>
+            <div class="land-sc-hint">Choose city, set budget, pick BHK — we'll search in real-time</div>
+        </div>
+        <div class="land-info-row">
+            <div class="land-info-item"><div class="land-info-dot"></div><div class="land-info-text"><strong>NoBroker</strong> direct API</div></div>
+            <div class="land-info-item"><div class="land-info-dot"></div><div class="land-info-text"><strong>Telegram</strong> group posts</div></div>
+            <div class="land-info-item"><div class="land-info-dot"></div><div class="land-info-text"><strong>24h</strong> auto-refresh</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- Search Modal -->
+<div class="land-modal-overlay" id="searchModalOverlay" onclick="closeSearchModal(event)">
+    <div class="land-modal" onclick="event.stopPropagation()">
+        <div class="lm-head">
+            <div class="lm-title">Custom search</div>
+            <button class="lm-close" onclick="closeSearchModal()">✕</button>
+        </div>
+        <div class="lm-field">
+            <label>City</label>
+            <select id="l-city">
+                <option value="Bangalore">Bangalore</option>
+                <option value="Mumbai">Mumbai</option>
+                <option value="Delhi">Delhi</option>
+                <option value="Hyderabad">Hyderabad</option>
+                <option value="Pune">Pune</option>
+                <option value="Chennai">Chennai</option>
+            </select>
+        </div>
+        <div class="lm-budget-row">
+            <div class="lm-field">
+                <label>Min budget</label>
+                <input id="l-min" type="number" placeholder="₹8,000" value="">
             </div>
-            <h3>🏠 What are you looking for?</h3>
-            <div class="l-row">
-                <div class="l-field">
-                    <div class="l-label">City</div>
-                    <select class="l-select" id="l-city">
-                        <option value="Bangalore">Bangalore</option>
-                        <option value="Mumbai">Mumbai</option>
-                        <option value="Delhi">Delhi</option>
-                        <option value="Hyderabad">Hyderabad</option>
-                        <option value="Pune">Pune</option>
-                        <option value="Chennai">Chennai</option>
-                        <option disabled>More cities coming soon</option>
-                    </select>
-                </div>
+            <div class="lm-field">
+                <label>Max budget</label>
+                <input id="l-max" type="number" placeholder="₹30,000" value="">
             </div>
-            <div class="l-row">
-                <div class="l-field">
-                    <div class="l-label">Budget (₹/month)</div>
-                    <div style="display:flex;gap:8px">
-                        <input class="l-input" id="l-min" type="number" placeholder="15,000" min="1000">
-                        <input class="l-input" id="l-max" type="number" placeholder="40,000" min="1000">
-                    </div>
-                </div>
+        </div>
+        <div class="lm-field">
+            <label>Bedrooms</label>
+            <div class="lm-bhk-chips" id="l-bhk-chips">
+                <div class="lm-chip active" data-bhk="">Any</div>
+                <div class="lm-chip" data-bhk="1">1 BHK</div>
+                <div class="lm-chip" data-bhk="2">2 BHK</div>
+                <div class="lm-chip" data-bhk="3">3 BHK</div>
+                <div class="lm-chip" data-bhk="4">4+</div>
             </div>
-            <div class="l-row">
-                <div class="l-field">
-                    <div class="l-label">Bedrooms</div>
-                    <div class="l-chips" id="l-bhk-chips">
-                        <div class="l-chip active" data-bhk="">Any</div>
-                        <div class="l-chip" data-bhk="1">1 BHK</div>
-                        <div class="l-chip" data-bhk="2">2 BHK</div>
-                        <div class="l-chip" data-bhk="3">3 BHK</div>
-                        <div class="l-chip" data-bhk="4">4+</div>
-                    </div>
-                </div>
-            </div>
-            <div class="l-row">
-                <div class="l-field">
-                    <div class="l-label">Email <span style="font-weight:400;color:#bbb">(get notified of new listings)</span></div>
-                    <input class="l-input" id="l-email" type="email" placeholder="you@email.com" style="width:100%">
-                </div>
-            </div>
-            <button class="l-go" id="l-go" onclick="startLandingSearch()">🔍 Search Rentals</button>
-            <div id="l-search-status" style="display:none;margin-top:16px;text-align:center">
-                <div class="l-prog-bar" id="l-prog-bar" style="display:block"><div class="l-prog-fill" id="l-prog-fill"></div></div>
-                <div id="l-prog-label" style="font-size:13px;color:#555;margin-top:10px;font-weight:600"></div>
-                <div id="l-prog-detail" style="font-size:11px;color:#999;margin-top:4px">Hang tight — we're pulling from multiple sources</div>
-                <div id="l-prog-sources" style="display:flex;gap:12px;justify-content:center;margin-top:12px;flex-wrap:wrap"></div>
-            </div>
+        </div>
+        <button class="lm-search-btn" id="l-go" onclick="startLandingSearch()">Search rentals</button>
+        <div id="l-search-status" style="display:none;margin-top:16px;text-align:center">
+            <div class="l-prog-bar" id="l-prog-bar" style="display:block"><div class="l-prog-fill" id="l-prog-fill"></div></div>
+            <div id="l-prog-label" style="font-size:13px;color:#555;margin-top:10px;font-weight:600"></div>
+            <div id="l-prog-detail" style="font-size:11px;color:#999;margin-top:4px">Searching multiple sources...</div>
+            <div id="l-prog-sources" style="display:flex;gap:12px;justify-content:center;margin-top:12px;flex-wrap:wrap"></div>
         </div>
     </div>
 </div>
@@ -560,15 +611,22 @@
 
 <script>
 // ─── Landing Page Logic ───
-document.querySelectorAll('#l-bhk-chips .l-chip').forEach(c => {
+
+// Search modal
+function openSearchModal() { document.getElementById('searchModalOverlay').classList.add('open'); }
+function closeSearchModal(e) { if (!e || e.target === document.getElementById('searchModalOverlay')) document.getElementById('searchModalOverlay').classList.remove('open'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSearchModal(); });
+
+// BHK chips in modal
+document.querySelectorAll('#l-bhk-chips .lm-chip').forEach(c => {
     c.addEventListener('click', () => {
-        document.querySelectorAll('#l-bhk-chips .l-chip').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('#l-bhk-chips .lm-chip').forEach(x => x.classList.remove('active'));
         c.classList.add('active');
     });
 });
 
 function getLandingBedrooms() {
-    const active = document.querySelector('#l-bhk-chips .l-chip.active');
+    const active = document.querySelector('#l-bhk-chips .lm-chip.active') || document.querySelector('#l-bhk-chips .l-chip.active');
     const val = active?.dataset.bhk;
     if (!val) return null;
     return [parseInt(val)];
@@ -754,19 +812,16 @@ function transitionToDashboard() {
 
 function showLanding() {
     const landing = document.getElementById('landing');
-    landing.style.display = 'flex';
+    landing.style.display = 'grid';
     landing.classList.remove('exit');
-    // Reset form state from any previous search
-    document.getElementById('l-search-status').style.display = 'none';
-    document.getElementById('l-go').disabled = false;
-    document.getElementById('l-go').textContent = '🔍 Search Rentals';
-    document.getElementById('l-prog-fill').style.width = '0';
-    document.getElementById('sv1').classList.add('active');
-    document.getElementById('sv1').classList.remove('done');
-    document.getElementById('sv2').classList.remove('active', 'done');
-    document.getElementById('sv3').classList.remove('active');
-    const stepsEl = document.querySelector('.steps-visual');
-    if (stepsEl) stepsEl.style.display = '';
+    // Reset modal state
+    const status = document.getElementById('l-search-status');
+    if (status) status.style.display = 'none';
+    const goBtn = document.getElementById('l-go');
+    if (goBtn) { goBtn.disabled = false; goBtn.textContent = 'Search rentals'; }
+    const progFill = document.getElementById('l-prog-fill');
+    if (progFill) progFill.style.width = '0';
+    closeSearchModal();
     const h3El = document.querySelector('.land-form h3');
     if (h3El) h3El.style.display = '';
     // Re-check for cached listings

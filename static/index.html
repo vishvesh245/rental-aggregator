@@ -240,8 +240,8 @@
         .sp-gal-next{right:8px}
         .sp-gal-count{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;z-index:2}
         .sp-hdr{padding:20px 20px 16px;border-bottom:1px solid var(--bd);flex-shrink:0;position:relative}
-        .sp-close{position:absolute;top:16px;right:16px;width:30px;height:30px;background:var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid var(--bd);font-size:13px;color:var(--m);font-family:inherit;transition:all .15s}
-        .sp-close:hover{background:#fee;color:var(--c);border-color:#fecaca}
+        .sp-close{position:absolute;top:12px;right:12px;width:30px;height:30px;background:rgba(0,0,0,.5);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;font-size:13px;color:#fff;font-family:inherit;transition:all .15s;z-index:10;backdrop-filter:blur(4px)}
+        .sp-close:hover{background:rgba(0,0,0,.75)}
         .sp-price{font-size:26px;font-weight:800;color:var(--n);letter-spacing:-.5px;line-height:1}
         .sp-price span{font-size:14px;font-weight:500;color:var(--lt)}
         .sp-area{font-size:15px;font-weight:600;color:var(--n);margin-top:6px}
@@ -251,8 +251,8 @@
         .sp-tags{display:flex;gap:6px;flex-wrap:wrap}
         .sp-tag{font-size:11px;font-weight:600;background:var(--bg);color:var(--m);border-radius:6px;padding:5px 10px}
         .sp-raw{background:var(--bg);border-radius:var(--rs);padding:14px;font-size:12.5px;color:var(--m);line-height:1.65;border:1px solid var(--bd);max-height:200px;overflow-y:auto}
-        .sp-acts{padding:16px 20px;border-top:1px solid var(--bd);display:flex;gap:8px;flex-shrink:0}
-        .sp-btn{flex:1;padding:12px;border-radius:10px;font-size:12.5px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all .15s;text-align:center;letter-spacing:.01em}
+        .sp-acts{padding:12px 20px;border-top:1px solid var(--bd);display:flex;gap:8px;flex-shrink:0;align-items:center}
+        .sp-btn{flex:1;padding:10px 8px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all .15s;text-align:center;letter-spacing:.01em;white-space:nowrap}
         .sp-btn-p{background:var(--n);color:#fff}.sp-btn-p:hover{background:var(--c);transform:translateY(-1px);box-shadow:0 4px 12px rgba(255,56,92,.2)}
         .sp-btn-s{background:var(--bg);color:var(--n);border:1.5px solid var(--bd)}.sp-btn-s:hover{background:var(--bd)}
 
@@ -520,6 +520,7 @@
         </div>
         <!-- Side panel for detail view -->
         <div class="side-panel" id="side-panel">
+            <button class="sp-close" onclick="closeDetailPanel()">✕</button>
             <div class="sp-gallery" id="sp-gallery" style="display:none">
                 <div class="sp-gallery-track" id="sp-gallery-track"></div>
                 <button class="sp-gal-btn sp-gal-prev" id="sp-gal-prev" onclick="galScroll(-1)">‹</button>
@@ -527,7 +528,6 @@
                 <div class="sp-gal-count" id="sp-gal-count"></div>
             </div>
             <div class="sp-hdr">
-                <button class="sp-close" onclick="closeDetailPanel()">✕</button>
                 <div class="sp-price" id="sp-price"></div>
                 <div class="sp-area" id="sp-area"></div>
             </div>

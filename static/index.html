@@ -1192,17 +1192,23 @@ function clearClusterFilter() {
 }
 
 // ─── Fetch ───
-async function fetchListings(params = {}) {
+async function fetchListings(params = {}, _retries = 2) {
     const q = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => { if (v !== '' && v != null) q.set(k, v); });
     try {
         const resp = await fetch('/api/listings?' + q);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
         listings = data.listings;
         render();
     } catch (e) {
+        if (_retries > 0) {
+            // Retry after a short delay (handles Render cold start)
+            await new Promise(r => setTimeout(r, 2000));
+            return fetchListings(params, _retries - 1);
+        }
         const scroll = document.getElementById('list-scroll');
-        scroll.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Failed to load listings</div><div class="empty-sub">Could not connect to the server. Check your connection and try again.</div><button class="empty-reset" onclick="applyFilters()">Retry</button></div>';
+        scroll.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Failed to load listings</div><div class="empty-sub">Server may be waking up. This can take up to 30 seconds on first visit.</div><button class="empty-reset" onclick="applyFilters()">Retry</button></div>';
         document.getElementById('list-count').textContent = 'Error';
     }
 }

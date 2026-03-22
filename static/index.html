@@ -112,6 +112,7 @@
         .loc-single .loc-check{font-size:11px;color:var(--g);font-weight:700;flex-shrink:0;display:none}
         .loc-single.resolved .loc-check{display:block}
         @keyframes pulse-border{0%,100%{border-color:var(--bd)}50%{border-color:var(--c);box-shadow:0 0 0 3px rgba(255,56,92,.15)}}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
         /* Inline radius pills — visible when location set */
         .radius-inline{display:flex;gap:4px;align-items:center}
         .radius-inline.hidden{display:none}
@@ -976,6 +977,8 @@ function render() {
     const onboarding = document.getElementById('onboarding');
 
     if (!listings.length) {
+        // Don't overwrite loading/connecting state if fetch is in progress
+        if (_fetchInFlight) return;
         scroll.innerHTML = '<div class="empty"><div class="empty-icon">🏠</div><div class="empty-title">No listings found</div><div class="empty-sub">We don\'t have rentals for this area yet. Run a search to get started.</div><button class="empty-reset" onclick="startMultiSearch()">🔍 Search Rentals</button></div>';
         if (onboarding) onboarding.style.display = '';
     } else if (!filtered.length) {
@@ -1192,21 +1195,28 @@ function clearClusterFilter() {
 }
 
 // ─── Fetch ───
+let _fetchInFlight = false;
 async function fetchListings(params = {}, _retries = 2) {
     const q = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => { if (v !== '' && v != null) q.set(k, v); });
+    _fetchInFlight = true;
     try {
         const resp = await fetch('/api/listings?' + q);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
         listings = data.listings;
+        _fetchInFlight = false;
         render();
     } catch (e) {
         if (_retries > 0) {
-            // Retry after a short delay (handles Render cold start)
+            // Show loading state (not error) during retry
+            const scroll = document.getElementById('list-scroll');
+            scroll.innerHTML = '<div class="empty"><div class="empty-icon" style="animation:spin 1s linear infinite">⏳</div><div class="empty-title">Connecting to server...</div><div class="empty-sub">First load may take 20\u201330 seconds while the server wakes up.</div></div>';
+            document.getElementById('list-count').textContent = 'Loading...';
             await new Promise(r => setTimeout(r, 2000));
             return fetchListings(params, _retries - 1);
         }
+        _fetchInFlight = false;
         const scroll = document.getElementById('list-scroll');
         scroll.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Failed to load listings</div><div class="empty-sub">Server may be waking up. This can take up to 30 seconds on first visit.</div><button class="empty-reset" onclick="applyFilters()">Retry</button></div>';
         document.getElementById('list-count').textContent = 'Error';

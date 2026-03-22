@@ -146,6 +146,12 @@
         .fd-input:focus{border-color:var(--c)}
         .flex1{flex:1}
         .topbar-stat{font-size:11px;font-weight:600;color:var(--m);white-space:nowrap;flex-shrink:0;background:var(--bg);padding:6px 12px;border-radius:20px;border:1px solid var(--bd)}
+        .breadcrumb{display:flex;align-items:center;gap:6px;padding:6px 16px;font-size:12px;color:#888;border-bottom:1px solid var(--bd);background:#fafafa}
+        .breadcrumb a{color:var(--c);text-decoration:none;font-weight:500}
+        .breadcrumb a:hover{text-decoration:underline}
+        .bc-sep{color:#ccc}
+        .bc-area{color:var(--n);font-weight:500}
+        .bc-count{margin-left:auto;color:#aaa;font-size:11px}
         /* Scrape status */
         .scrape-status{display:none;align-items:center;gap:6px;font-size:12px;color:#666;white-space:nowrap}
         .dot{width:8px;height:8px;border-radius:50%;animation:blink 1s infinite}
@@ -388,10 +394,8 @@
                 <option value="Chennai">Chennai</option>
             </select>
             <div class="sb-sep"></div>
-            <input class="sb-field" id="sb-area" placeholder="Filter by area">
+            <input class="sb-field" id="sb-area" placeholder="Filter by area..." oninput="debounceAreaFilter()">
             <button class="sb-area-clear" id="sb-area-clear" onclick="clearAreaFilter()">✕</button>
-            <button class="sb-btn" id="search-btn" onclick="applyFilters()" style="min-width:50px">Filter</button>
-            <button class="sb-refresh" id="refresh-btn" onclick="startMultiSearch()" title="Fetch new listings from all sources" style="width:auto;padding:0 8px;font-size:11px;font-weight:600">+ New</button>
         </div>
         <div class="area-hint" id="area-hint"></div>
         <div class="scrape-status" id="scrape-status"></div>
@@ -427,6 +431,15 @@
         <div class="clear-pill" id="clear-pill" onclick="resetFilters()">Clear all ✕</div>
         <div class="flex1"></div>
         <div class="topbar-stat" id="topbar-stat"></div>
+    </div>
+    <!-- ── Breadcrumb ── -->
+    <div class="breadcrumb" id="breadcrumb">
+        <a href="#" onclick="showLanding();return false">🔍 New search</a>
+        <span class="bc-sep">›</span>
+        <span id="bc-city">Bangalore</span>
+        <span class="bc-sep bc-area-sep" style="display:none">›</span>
+        <span class="bc-area" id="bc-area" style="display:none"></span>
+        <span class="bc-count" id="bc-count"></span>
     </div>
     <!-- ── Filter drawer ── -->
     <div class="filter-drawer" id="filter-drawer">
@@ -1002,6 +1015,8 @@ function render() {
     updateNudge();
     updateLegend();
     updateTopbarStat(filtered);
+    // Update breadcrumb with current filter state
+    if (typeof updateBreadcrumb === 'function') updateBreadcrumb();
 }
 
 // ─── Card interactions ───
@@ -1380,10 +1395,37 @@ function updateAreaHighlight() {
     }
 }
 
+// Debounced area filter — auto-apply as user types
+let _areaDebounce = null;
+function debounceAreaFilter() {
+    clearTimeout(_areaDebounce);
+    updateAreaHighlight();
+    _areaDebounce = setTimeout(() => applyFilters(), 300);
+}
+
 function clearAreaFilter() {
     document.getElementById('sb-area').value = '';
     updateAreaHighlight();
     applyFilters();
+}
+
+function updateBreadcrumb() {
+    const city = document.getElementById('sb-city').value || 'Bangalore';
+    const area = document.getElementById('sb-area').value.trim();
+    document.getElementById('bc-city').textContent = city;
+    const areaEl = document.getElementById('bc-area');
+    const areaSep = document.querySelector('.bc-area-sep');
+    if (area) {
+        areaEl.textContent = area;
+        areaEl.style.display = '';
+        areaSep.style.display = '';
+    } else {
+        areaEl.style.display = 'none';
+        areaSep.style.display = 'none';
+    }
+    const total = allListings.length;
+    const shown = document.querySelectorAll('.card:not([style*="display: none"])').length || total;
+    document.getElementById('bc-count').textContent = area ? shown + ' of ' + total + ' listings' : total + ' listings';
 }
 
 // Sort

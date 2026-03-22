@@ -174,5 +174,9 @@ def _fuzzy_key_from_dict(listing: dict) -> str:
     area = _normalize_area(listing.get("area") or "")
     bedrooms = str(listing.get("bedrooms", "x"))
     price = listing.get("price")
+    try:
+        price = int(price) if price else 0
+    except (ValueError, TypeError):
+        price = 0
     price_bucket = str((price // 2000) * 2000) if price else "0"
     return f"{city}|{area}|{bedrooms}|{price_bucket}"

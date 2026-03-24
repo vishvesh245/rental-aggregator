@@ -82,9 +82,14 @@ async def api_listings(
     return {"listings": listings, "count": len(listings)}
 
 
-@app.get("/api/stats")
+@app.api_route("/api/stats", methods=["GET", "HEAD"])
 async def api_stats():
     return get_stats()
+
+
+@app.api_route("/health", methods=["GET", "HEAD"])
+async def health():
+    return {"status": "ok"}
 
 
 class EmailCaptureRequest(BaseModel):

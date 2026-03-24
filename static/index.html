@@ -773,6 +773,7 @@ function pollLandingJob(jobId, fill, label, sources) {
 
             applyFilters();
             fetchStats();
+            closeSearchModal();
             setTimeout(() => transitionToDashboard(), 800);
             return;
         }

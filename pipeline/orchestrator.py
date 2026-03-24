@@ -207,7 +207,7 @@ def run_full_pipeline(
     return results
 
 
-PARALLEL_SCRAPE_TIMEOUT = 150  # seconds — don't wait more than 2.5 min for any source
+PARALLEL_SCRAPE_TIMEOUT = 35  # seconds — don't wait more than 35s for any source
 
 
 def _scrape_all_parallel(

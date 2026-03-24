@@ -175,7 +175,7 @@ class NoBrokerScraper(BaseScraper):
         def _fetch_page(page: int) -> list[dict]:
             pq = {**query_params, "pageNo": str(page)}
             try:
-                resp = httpx.get(NOBROKER_API, params=pq, headers=HEADERS, timeout=30)
+                resp = httpx.get(NOBROKER_API, params=pq, headers=HEADERS, timeout=15)
                 resp.raise_for_status()
                 return resp.json().get("data", [])
             except Exception as e:
@@ -184,8 +184,8 @@ class NoBrokerScraper(BaseScraper):
 
         with ThreadPoolExecutor(max_workers=min(max_pages, 5)) as executor:
             page_futures = {executor.submit(_fetch_page, page): page for page in range(1, max_pages + 1)}
-            for future in as_completed(page_futures):
-                items = future.result()
+            for future in as_completed(page_futures, timeout=25):
+                items = future.result(timeout=25)
                 for item in items:
                     post = self._item_to_raw_post(item)
                     listing = self.extract_structured(item)

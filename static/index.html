@@ -1615,7 +1615,7 @@ async function pollSearchJob(jobId, sources) {
             btn.textContent = '🔍 Search';
             applyFilters();
             fetchStats();
-            setTimeout(() => { status.style.display = 'none'; }, 5000);
+            setTimeout(() => { closeSearchModal(); status.style.display = 'none'; }, 1200);
             return;
         }
 

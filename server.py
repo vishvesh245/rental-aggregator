@@ -273,7 +273,7 @@ class MultiScrapeRequest(BaseModel):
     bedrooms: list[int] | None = None
     furnished: str = ""
     sources: list[str] | None = None  # None = all sources
-    max_results: int = 500
+    max_results: int = 50
 
 
 def _run_multi_pipeline(job_id: str, req: MultiScrapeRequest):

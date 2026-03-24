@@ -9,6 +9,7 @@ from __future__ import annotations
 import html
 import json
 import hashlib
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 
@@ -21,9 +22,16 @@ from pipeline.base_scraper import BaseScraper, SearchParams
 # Cache place IDs to avoid repeat geocoding calls
 _PLACE_ID_CACHE: dict[str, str] = {}
 
-# Hardcoded place IDs for common Bangalore areas (avoids API call)
+# Hardcoded place IDs for common cities and areas (avoids Google API call)
 KNOWN_PLACE_IDS: dict[str, str] = {
+    # Cities
     "bangalore": "ChIJbU60yXAWrjsR4E9-UejD3_g",
+    "mumbai": "ChIJwe1EZjDG5zsRaYxkjY_tpF0",
+    "delhi": "ChIJL_P_CXMEDTkRw0ZdG-0GVvw",
+    "hyderabad": "ChIJx9Xs19DKBTQRL4_ZmYt4cF4",
+    "pune": "ChIJARFGZy6_wjsRQ-Kcjyp0bvE",
+    "chennai": "ChIJYTN9T-17UjsRSOT9nyVW2y0",
+    # Bangalore areas
     "koramangala": "ChIJLfyY2E4UrjsRVq4AjI7zgRY",
     "hsr layout": "ChIJ0RIoNXAUrjsRc_OZJmYJnzQ",
     "indiranagar": "ChIJgzHBmforUjsRiXnRFyxXo5c",
@@ -164,30 +172,27 @@ class NoBrokerScraper(BaseScraper):
         all_listings: list[RentalListing] = []
         max_pages = min(10, (params.max_results // 25) + 1)
 
-        for page in range(1, max_pages + 1):
-            query_params["pageNo"] = str(page)
+        def _fetch_page(page: int) -> list[dict]:
+            pq = {**query_params, "pageNo": str(page)}
             try:
-                resp = httpx.get(NOBROKER_API, params=query_params, headers=HEADERS, timeout=30)
+                resp = httpx.get(NOBROKER_API, params=pq, headers=HEADERS, timeout=30)
                 resp.raise_for_status()
-                data = resp.json()
+                return resp.json().get("data", [])
             except Exception as e:
                 print(f"  [!] NoBroker API error (page {page}): {e}")
-                break
+                return []
 
-            listings_data = data.get("data", [])
-            if not listings_data:
-                break
-
-            for item in listings_data:
-                post = self._item_to_raw_post(item)
-                listing = self.extract_structured(item)
-                if post:
-                    all_posts.append(post)
-                if listing:
-                    all_listings.append(listing)
-
-            if len(all_posts) >= params.max_results:
-                break
+        with ThreadPoolExecutor(max_workers=min(max_pages, 5)) as executor:
+            page_futures = {executor.submit(_fetch_page, page): page for page in range(1, max_pages + 1)}
+            for future in as_completed(page_futures):
+                items = future.result()
+                for item in items:
+                    post = self._item_to_raw_post(item)
+                    listing = self.extract_structured(item)
+                    if post:
+                        all_posts.append(post)
+                    if listing:
+                        all_listings.append(listing)
 
         # Fallback to mock data
         if not all_posts:

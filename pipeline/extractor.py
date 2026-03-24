@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import anthropic
 
@@ -117,13 +118,16 @@ def extract_rental_details(
     client = anthropic.Anthropic(api_key=api_key)
     listings = []
 
-    for post in posts:
-        try:
-            listing = _extract_single(client, post)
-            if listing:
-                listings.append(listing)
-        except Exception as e:
-            print(f"  [!] Failed to extract post {post.post_id}: {e}")
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        futures = {executor.submit(_extract_single, client, post): post for post in posts}
+        for future in as_completed(futures):
+            post = futures[future]
+            try:
+                listing = future.result()
+                if listing:
+                    listings.append(listing)
+            except Exception as e:
+                print(f"  [!] Failed to extract post {post.post_id}: {e}")
 
     return listings
 

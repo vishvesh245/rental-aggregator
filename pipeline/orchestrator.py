@@ -108,19 +108,35 @@ def run_full_pipeline(
         "total_listings": 0,
     }
 
-    # Step 1: Scrape all sources in parallel
-    # NoBroker uses scrape_and_extract for higher quality structured extraction
+    # Step 1: Scrape all sources in parallel (NoBroker runs concurrently with others)
     nobroker_pre_extracted: list[RentalListing] = []
     non_nb_sources = [s for s in sources_to_run if s != "nobroker"]
 
     print(f"\n[1/3] Scraping {len(sources_to_run)} sources in parallel...")
-    all_posts_by_source = _scrape_all_parallel(params, non_nb_sources) if non_nb_sources else {}
+    all_posts_by_source: dict[str, list[RawPost]] = {}
 
-    if "nobroker" in sources_to_run:
-        nobroker_scraper = NoBrokerScraper()
-        nb_posts, nb_listings = nobroker_scraper.scrape_and_extract(params)
-        all_posts_by_source["nobroker"] = nb_posts
-        nobroker_pre_extracted = nb_listings
+    with ThreadPoolExecutor(max_workers=len(sources_to_run) + 1) as executor:
+        nb_future = executor.submit(NoBrokerScraper().scrape_and_extract, params) if "nobroker" in sources_to_run else None
+        non_nb_futures = {
+            executor.submit(ALL_SCRAPERS[s]().scrape, params): s
+            for s in non_nb_sources if s in ALL_SCRAPERS
+        }
+
+        for future, source_name in non_nb_futures.items():
+            try:
+                all_posts_by_source[source_name] = future.result(timeout=PARALLEL_SCRAPE_TIMEOUT)
+            except Exception as e:
+                print(f"  [!] {source_name}: timed out or failed ({e})")
+                all_posts_by_source[source_name] = []
+
+        if nb_future:
+            try:
+                nb_posts, nb_listings = nb_future.result(timeout=PARALLEL_SCRAPE_TIMEOUT)
+                all_posts_by_source["nobroker"] = nb_posts
+                nobroker_pre_extracted = nb_listings
+            except Exception as e:
+                print(f"  [!] nobroker: timed out or failed ({e})")
+                all_posts_by_source["nobroker"] = []
 
     # Step 2: Extract structured data
     if on_status:

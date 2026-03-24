@@ -672,7 +672,7 @@ function startLandingSearch() {
     const body = { city, budget_min: budgetMin, budget_max: budgetMax, bedrooms, max_results: 50 };
 
     // Capture email if provided
-    const email = document.getElementById('l-email').value.trim();
+    const email = document.getElementById('l-email')?.value?.trim() || '';
     if (email) {
         fetch('/api/capture-email', {
             method: 'POST',

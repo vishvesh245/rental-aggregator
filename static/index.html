@@ -663,9 +663,9 @@ function startLandingSearch() {
     fill.style.width = '5%';
     fill.style.background = 'linear-gradient(90deg,var(--c),#ff6b8a)';
 
-    document.getElementById('sv1').classList.remove('active');
-    document.getElementById('sv1').classList.add('done');
-    document.getElementById('sv2').classList.add('active');
+    document.getElementById('sv1')?.classList.remove('active');
+    document.getElementById('sv1')?.classList.add('done');
+    document.getElementById('sv2')?.classList.add('active');
 
     document.getElementById('sb-city').value = city;
 
@@ -767,9 +767,9 @@ function pollLandingJob(jobId, fill, label, sources) {
             label.style.color = '#10b981';
             detail.textContent = srcSummary || 'Ready to explore';
 
-            document.getElementById('sv2').classList.remove('active');
-            document.getElementById('sv2').classList.add('done');
-            document.getElementById('sv3').classList.add('active');
+            document.getElementById('sv2')?.classList.remove('active');
+            document.getElementById('sv2')?.classList.add('done');
+            document.getElementById('sv3')?.classList.add('active');
 
             applyFilters();
             fetchStats();
@@ -795,9 +795,9 @@ function pollLandingJob(jobId, fill, label, sources) {
         if (s.detail) detail.textContent = s.detail;
 
         if (job.status === 'extracting' || job.status === 'geocoding') {
-            document.getElementById('sv2').classList.remove('active');
-            document.getElementById('sv2').classList.add('done');
-            document.getElementById('sv3').classList.add('active');
+            document.getElementById('sv2')?.classList.remove('active');
+            document.getElementById('sv2')?.classList.add('done');
+            document.getElementById('sv3')?.classList.add('active');
         }
 
         setTimeout(poll, 2000);

@@ -831,6 +831,7 @@ function showLanding() {
 
 // ─── Cached listings — view saved ───
 function viewCachedListings() {
+    document.getElementById('sb-city').value = 'Bangalore';
     applyFilters();
     fetchStats();
     setTimeout(() => transitionToDashboard(), 100);

@@ -119,6 +119,7 @@
         .search-bar{display:flex;align-items:center;background:var(--bg);border-radius:10px;padding:0;border:1.5px solid var(--bd);transition:all .2s;flex-shrink:0;overflow:hidden}
         .search-bar:focus-within{border-color:var(--c);box-shadow:0 0 0 3px rgba(255,56,92,.08)}
         .sb-select{padding:9px 10px;border:none;background:none;font-size:12.5px;font-weight:600;font-family:inherit;color:var(--n);cursor:pointer;outline:none;border-right:1px solid var(--bd)}
+        .sb-city-label{padding:9px 12px;font-size:12.5px;font-weight:600;color:var(--n);border-right:1px solid var(--bd);white-space:nowrap;user-select:none}
         .sb-sep{width:1px;height:18px;background:var(--bd);flex-shrink:0}
         .sb-field{padding:9px 12px;border:none;background:none;font-size:12.5px;font-family:inherit;outline:none;width:130px;color:var(--n)}
         .sb-field::placeholder{color:var(--lt)}
@@ -437,14 +438,8 @@
     <div class="topbar">
         <div class="logo" onclick="showLanding()" style="cursor:pointer" title="Back to search">Rent<em>Scout</em></div>
         <div class="search-bar">
-            <select class="sb-select" id="sb-city">
-                <option value="Bangalore">Bangalore</option>
-                <option value="Mumbai">Mumbai</option>
-                <option value="Delhi">Delhi</option>
-                <option value="Hyderabad">Hyderabad</option>
-                <option value="Pune">Pune</option>
-                <option value="Chennai">Chennai</option>
-            </select>
+            <input type="hidden" id="sb-city" value="Bangalore">
+            <span class="sb-city-label" id="sb-city-label">Bangalore</span>
             <div class="sb-sep"></div>
             <input class="sb-field" id="sb-area" placeholder="Filter by area..." oninput="debounceAreaFilter()">
             <button class="sb-area-clear" id="sb-area-clear" onclick="clearAreaFilter()">✕</button>
@@ -668,6 +663,7 @@ function startLandingSearch() {
     document.getElementById('sv2')?.classList.add('active');
 
     document.getElementById('sb-city').value = city;
+    document.getElementById('sb-city-label').textContent = city;
 
     const body = { city, budget_min: budgetMin, budget_max: budgetMax, bedrooms, max_results: 50 };
 
@@ -837,6 +833,7 @@ async function viewCachedListings() {
     titleEl.innerHTML = '⏳ Loading listings…';
     cta.style.pointerEvents = 'none';
     document.getElementById('sb-city').value = 'Bangalore';
+    document.getElementById('sb-city-label').textContent = 'Bangalore';
     await applyFilters();
     fetchStats();
     titleEl.innerHTML = orig;

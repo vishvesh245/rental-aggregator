@@ -212,10 +212,12 @@
         .list-scroll{flex:1;overflow-y:auto}
 
         /* Cluster notice */
-        .cl-notice{padding:10px 16px;background:#fffbe6;border-bottom:1px solid #ffeaa7;font-size:12px;color:#856404;display:none;align-items:center;gap:6px;flex-shrink:0}
+        .cl-notice{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:1000;background:#1a1a2e;border-radius:24px;padding:8px 10px 8px 16px;display:none;align-items:center;gap:10px;font-size:12px;color:#fff;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.3);pointer-events:auto}
         .cl-notice.show{display:flex}
-        .cl-notice strong{font-weight:700}
-        .cl-notice button{background:none;border:none;cursor:pointer;color:#856404;font-weight:700;font-size:14px;margin-left:auto;padding:0 4px}
+        .cl-notice strong{font-weight:700;color:#ff385c}
+        .cl-notice .cl-total{color:rgba(255,255,255,.45);font-size:11px}
+        .cl-notice button{background:rgba(255,255,255,.15);border:none;cursor:pointer;color:#fff;font-weight:600;font-size:11px;padding:4px 10px;border-radius:12px;white-space:nowrap;transition:background .15s}
+        .cl-notice button:hover{background:rgba(255,255,255,.28)}
 
         /* First-run nudge */
         .nudge{padding:14px 16px;background:linear-gradient(135deg,#f0f7ff,#f5f0ff);border-bottom:1px solid #e0e4ff;display:flex;gap:12px;align-items:flex-start;flex-shrink:0}
@@ -536,10 +538,6 @@
 <div class="main">
     <!-- List panel -->
     <div class="list-panel">
-        <div class="cl-notice" id="cl-notice">
-            📍 <strong id="cl-area-name">Area</strong> · <span id="cl-count">0</span> listings
-            <button onclick="clearClusterFilter()">✕</button>
-        </div>
         <div class="nudge" id="nudge">
             <div class="nudge-icon">📍</div>
             <div class="nudge-body">
@@ -563,6 +561,11 @@
 
     <!-- Map + Side Panel -->
     <div class="map-area">
+        <div class="cl-notice" id="cl-notice">
+            <strong id="cl-count">0</strong> listings near <span id="cl-area-name">Area</span>
+            <span class="cl-total">of <span id="cl-total">0</span> total</span>
+            <button onclick="clearClusterFilter()">See all ✕</button>
+        </div>
         <div id="map"></div>
         <div class="map-legend" id="map-legend">
             <div class="legend-toggle" title="Map Legend">🗺️</div>
@@ -894,6 +897,7 @@ let radiusKm = 0;
 let sortBy = 'newest';
 let activeCardId = null;
 let clusterFilterIds = null;
+let clusterZoom = null;
 let nudgeDismissed = false;
 let selectedPanelListing = null;
 let locType = 'office'; // single location mode: 'office' or 'home'
@@ -985,6 +989,7 @@ function render() {
         const ids = childMarkers.map(m => m._lid).filter(Boolean);
         if (ids.length) {
             clusterFilterIds = ids;
+            clusterZoom = map.getZoom();
             const clusterListings = listings.filter(l => ids.includes(l.raw_post_id));
             // Find most common area name in cluster
             const areaCounts = {};
@@ -992,6 +997,7 @@ function render() {
             const areaName = Object.entries(areaCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Area';
             document.getElementById('cl-area-name').textContent = areaName.split(',')[0];
             document.getElementById('cl-count').textContent = clusterListings.length;
+            document.getElementById('cl-total').textContent = listings.length;
             document.getElementById('cl-notice').classList.add('show');
             render();
         }
@@ -1251,9 +1257,16 @@ async function copyMessage(listingId, btn) {
 // ─── Cluster filter ───
 function clearClusterFilter() {
     clusterFilterIds = null;
+    clusterZoom = null;
     document.getElementById('cl-notice').classList.remove('show');
     render();
 }
+
+map.on('zoomend', function() {
+    if (clusterFilterIds && clusterZoom !== null && map.getZoom() < clusterZoom) {
+        clearClusterFilter();
+    }
+});
 
 // ─── Fetch ───
 let _fetchInFlight = false;

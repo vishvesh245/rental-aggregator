@@ -28,9 +28,9 @@ KNOWN_PLACE_IDS: dict[str, str] = {
     "bangalore": "ChIJbU60yXAWrjsR4E9-UejD3_g",
     "mumbai": "ChIJwe1EZjDG5zsRaYxkjY_tpF0",
     "delhi": "ChIJL_P_CXMEDTkRw0ZdG-0GVvw",
-    "hyderabad": "ChIJx9Xs19DKBTQRL4_ZmYt4cF4",
-    "pune": "ChIJARFGZy6_wjsRQ-Kcjyp0bvE",
-    "chennai": "ChIJYTN9T-17UjsRSOT9nyVW2y0",
+    "hyderabad": "ChIJx9Lr6tqZyzsRwvu6koO3k64",
+    "pune": "ChIJARFGZy6_wjsRQ-Oenb9DjYI",
+    "chennai": "ChIJYTN9T-plUjoRM9RjaAunYW4",
     # Bangalore areas
     "koramangala": "ChIJLfyY2E4UrjsRVq4AjI7zgRY",
     "hsr layout": "ChIJ0RIoNXAUrjsRc_OZJmYJnzQ",

@@ -831,9 +831,16 @@ function showLanding() {
 
 // ─── Cached listings — view saved ───
 async function viewCachedListings() {
+    const cta = document.getElementById('land-explore-cta');
+    const titleEl = cta.querySelector('.land-cta-title');
+    const orig = titleEl.innerHTML;
+    titleEl.innerHTML = '⏳ Loading listings…';
+    cta.style.pointerEvents = 'none';
     document.getElementById('sb-city').value = 'Bangalore';
     await applyFilters();
     fetchStats();
+    titleEl.innerHTML = orig;
+    cta.style.pointerEvents = '';
     transitionToDashboard();
 }
 

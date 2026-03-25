@@ -830,11 +830,11 @@ function showLanding() {
 }
 
 // ─── Cached listings — view saved ───
-function viewCachedListings() {
+async function viewCachedListings() {
     document.getElementById('sb-city').value = 'Bangalore';
-    applyFilters();
+    await applyFilters();
     fetchStats();
-    setTimeout(() => transitionToDashboard(), 100);
+    transitionToDashboard();
 }
 
 async function checkExistingListings() {
@@ -1328,7 +1328,7 @@ function applyFilters() {
     updateFilterBadge();
     updateAreaHighlight();
     // Preserve cluster filter — only clear when user explicitly dismisses
-    fetchListings({
+    return fetchListings({
         city: document.getElementById('sb-city').value,
         area: document.getElementById('sb-area').value.trim(),
         max_price: document.getElementById('f-max').value,
